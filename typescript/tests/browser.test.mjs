@@ -1,3 +1,4 @@
+import { buildId } from "../../dist/generated/artifact.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -72,7 +73,7 @@ test("artifact pairing, preset selection, disposal and isolated results", async 
     new Uint8Array([1, 2, 3]),
     new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]),
   ])
-    await assert.rejects(createParser(bad, presets.traq.v1), /does not match/);
+    await assert.rejects(createParser(bad, presets.traq.v1));
   await assert.rejects(createParser(bytes, "traq.invalid"), /Markdown:/);
   const traq = await createParser(bytes, presets.traq.v1);
   const common = await createParser(bytes, presets.commonmark);
@@ -113,7 +114,7 @@ test("raw ABI validates UTF-8, preset and mode; linear memory is bounded", async
   };
   assert.equal(wasm.abi_version(), 3);
   assert(call("configure", "traq.bad").error);
-  assert.deepEqual(call("configure", "traq.v1"), { configured: null });
+  assert.equal(call("configure", "traq.v1").configured, buildId);
   assert.deepEqual(call("parse", new Uint8Array([255])), {
     error: { code: "invalid_utf8" },
   });
@@ -165,12 +166,31 @@ test("Go and TypeScript fixtures retain the Rust AST for blocks and inlines", as
   }
 });
 
-test('Wasm input views respect their byte range and are copied before async work', async () => {
-  const padded = Buffer.concat([Buffer.from([99]),bytes,Buffer.from([99])]);
-  const view = padded.subarray(1,padded.length-1);
-  const pending = createParser(view,presets.traq.v1);
+test("Wasm input views respect their byte range and are copied before async work", async () => {
+  const padded = Buffer.concat([Buffer.from([99]), bytes, Buffer.from([99])]);
+  const view = padded.subarray(1, padded.length - 1);
+  const pending = createParser(view, presets.traq.v1);
   view.fill(0);
   const parser = await pending;
-  try { assert.equal(parser.parse('copied').source,'copied'); }
-  finally { parser.dispose(); }
+  try {
+    assert.equal(parser.parse("copied").source, "copied");
+  } finally {
+    parser.dispose();
+  }
+});
+
+test("a valid parser Wasm from a different Rust build is rejected", async () => {
+  const other = Buffer.from(bytes);
+  const id = Buffer.from(buildId);
+  let count = 0;
+  for (
+    let position = other.indexOf(id);
+    position !== -1;
+    position = other.indexOf(id, position + id.length)
+  ) {
+    other.fill(48, position, position + id.length);
+    count++;
+  }
+  assert(count > 0);
+  await assert.rejects(createParser(other, presets.traq.v1), /does not match/);
 });

@@ -1,4 +1,4 @@
-import { sha256, inputBytes } from "./generated/artifact.js";
+import { buildId, inputBytes } from "./generated/artifact.js";
 import type { Document } from "./generated/nodes.js";
 import type { Preset } from "./generated/presets.js";
 export { presets } from "./generated/presets.js";
@@ -30,15 +30,6 @@ export async function createParser(
   preset: Preset,
 ): Promise<Parser> {
   const artifact = new Uint8Array(bytes).buffer;
-  const digest = new Uint8Array(
-    await crypto.subtle.digest("SHA-256", artifact),
-  );
-  if (
-    Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join(
-      "",
-    ) !== sha256
-  )
-    throw new Error("Wasm does not match this SDK build");
   let wasm: Wasm | undefined = (await WebAssembly.instantiate(artifact, {}))
     .instance.exports as Wasm;
   const encoder = new TextEncoder(),
@@ -60,7 +51,7 @@ export async function createParser(
       throw new TypeError("Source contains an unpaired surrogate");
     const pointer = wasm.input_ptr(input.length);
     if (!pointer) throw new RangeError("Wasm input limit exceeded");
-    let result: { document: Document; error?: unknown };
+    let result: { document: Document; configured?: string; error?: unknown };
     try {
       new Uint8Array(wasm.memory.buffer, pointer, input.length).set(input);
       const length =
@@ -74,11 +65,13 @@ export async function createParser(
       wasm = undefined;
       throw error;
     }
-    // Rust validates the AST before encoding; the digest pins its matching types.
+    // Rust validates the AST before encoding; the build ID pairs its types.
     if (result.error)
       throw new Error("Markdown: " + JSON.stringify(result.error), {
         cause: result.error,
       });
+    if (operation === "configure" && result.configured !== buildId)
+      throw new Error("Wasm does not match this SDK build");
     return result.document;
   }
   call("configure", preset);

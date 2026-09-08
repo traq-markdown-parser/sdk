@@ -18,7 +18,7 @@ npm run build
 npm run examples
 ```
 
-他のリポジトリの checkout は不要です。Cargo が固定した Git revision を取得します。Wasm・JavaScript・型定義は `dist/` に出力します。Rust から生成する TypeScript / Go のソースと、対応する Wasm の SHA-256 はソース管理します。バイナリと SDK は同じビルドの組を配布してください。
+他のリポジトリの checkout は不要です。Cargo が固定した Git revision を取得します。Wasm・JavaScript・型定義は `dist/` に出力します。Rust から生成する TypeScript / Go のソースと、対応する Rust ビルド ID はソース管理します。バイナリと SDK は同じソース・固定依存から生成した組を配布してください。
 
 まだレジストリへ公開していません。TypeScript は `npm pack` で作ったアーカイブを利用できます。
 

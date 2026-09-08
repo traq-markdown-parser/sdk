@@ -3,7 +3,6 @@ package markdown
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 
@@ -20,9 +19,6 @@ type Parser struct {
 }
 
 func New(ctx context.Context, wasm []byte, preset Preset) (*Parser, error) {
-	if fmt.Sprintf("%x", sha256.Sum256(wasm)) != artifactSHA256 {
-		return nil, fmt.Errorf("Wasm does not match this SDK build")
-	}
 	rt := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithMemoryLimitPages(memoryPages).WithCloseOnContextDone(true))
 	module, err := rt.Instantiate(ctx, wasm)
 	if err != nil {
@@ -30,6 +26,12 @@ func New(ctx context.Context, wasm []byte, preset Preset) (*Parser, error) {
 		return nil, err
 	}
 	p := &Parser{runtime: rt, module: module, gate: make(chan struct{}, 1)}
+	for _, name := range []string{"input_ptr", "output_ptr", "configure", "parse"} {
+		if module.Memory() == nil || module.ExportedFunction(name) == nil {
+			p.Close(context.Background())
+			return nil, fmt.Errorf("invalid parser Wasm exports")
+		}
+	}
 	if _, err := p.call(ctx, "configure", string(preset)); err != nil {
 		p.Close(context.Background())
 		return nil, err
@@ -98,14 +100,18 @@ func (p *Parser) call(ctx context.Context, operation, input string, args ...uint
 		return nil, fmt.Errorf("invalid Wasm output range")
 	}
 	var reply struct {
-		Document json.RawMessage `json:"document"`
-		Error    json.RawMessage `json:"error"`
+		Document   json.RawMessage `json:"document"`
+		Error      json.RawMessage `json:"error"`
+		Configured string          `json:"configured"`
 	}
 	if err := json.Unmarshal(output, &reply); err != nil {
 		return nil, err
 	}
 	if reply.Error != nil {
 		return nil, fmt.Errorf("markdown: %s", reply.Error)
+	}
+	if operation == "configure" && reply.Configured != buildID {
+		return nil, fmt.Errorf("Wasm does not match this SDK build")
 	}
 	return reply.Document, nil
 }

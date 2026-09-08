@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -180,5 +181,22 @@ func TestInitialization(t *testing.T) {
 	}
 	if _, err := New(context.Background(), bytes, Preset("invalid")); err == nil {
 		t.Fatal("accepted invalid preset")
+	}
+}
+
+func TestBuildMismatch(t *testing.T) {
+	wasm, err := os.ReadFile("../dist/parser.wasm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(wasm, []byte(buildID)) {
+		t.Fatal("missing build ID")
+	}
+	other := bytes.ReplaceAll(wasm, []byte(buildID), []byte(strings.Repeat("0", len(buildID))))
+	if _, err := New(context.Background(), other, PresetTraQV1); err == nil || !strings.Contains(err.Error(), "does not match") {
+		t.Fatal(err)
+	}
+	if _, err := New(context.Background(), []byte{0, 97, 115, 109, 1, 0, 0, 0}, PresetTraQV1); err == nil {
+		t.Fatal("accepted empty Wasm")
 	}
 }

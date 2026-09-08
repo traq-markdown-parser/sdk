@@ -40,7 +40,7 @@ Bindings are authored in `.ts`; `.js` and `.d.ts` are build outputs. Rust is the
 
 ## Updating dependencies
 
-The unpublished Rust crates use Git dependencies with a fixed revision and a package version. `Cargo.lock` is committed. Update all dependencies from one repository to the same revision, then rebuild and inspect the generated contract diff. Parser initialization rejects a Wasm SHA-256 that does not match its generated SDK.
+The unpublished Rust crates use Git dependencies with a fixed revision and a package version. `Cargo.lock` is committed. Update all dependencies from one repository to the same revision, then rebuild and inspect the generated contract diff. Parser initialization rejects a Rust build ID that does not match its generated SDK.
 
 For simultaneous local development, keep `core`, `commonmark`, `trap`, and `sdk` beside one another. Use a machine-local Cargo patch configuration. Override the entire edited repository so its shared AST and declaration types have one Cargo package identity. For example:
 

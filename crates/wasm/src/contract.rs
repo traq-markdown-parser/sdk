@@ -2,6 +2,7 @@ use std::sync::LazyLock;
 static CONTRACT: LazyLock<String> = LazyLock::new(|| {
     serde_json::json!({
         "abiVersion": 3, "astVersion": 4,
+        "buildId": env!("MARKDOWN_BUILD_ID"),
         "presets": markdown_traq::bindings::bundled().exports["presets"],
         "limits": {
             "inputBytes": super::limits::MAX_INPUT,

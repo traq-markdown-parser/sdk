@@ -33,7 +33,10 @@ pub extern "C" fn configure() -> u32 {
                 reason: "invalid preset encoding".into(),
             })
             .and_then(select)
-            .map(|grammar| GRAMMAR.set(Some(grammar)));
+            .map(|grammar| {
+                GRAMMAR.set(Some(grammar));
+                env!("MARKDOWN_BUILD_ID")
+            });
         io.reply("configured", &result);
         io.output.len() as u32
     })

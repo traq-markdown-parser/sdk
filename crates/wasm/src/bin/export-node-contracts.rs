@@ -25,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Check that metadata and codec registrations agree before writing bindings.
     let _ = nodes::codec();
     let manifest = serde_json::json!({
+        "buildId": env!("MARKDOWN_BUILD_ID"),
         "presets": markdown_traq::bindings::bundled().exports["presets"],
         "limits": {"inputBytes": limits::MAX_INPUT, "outputBytes": limits::MAX_OUTPUT, "memoryBytes": limits::MEMORY_BYTES},
         "nodes": node_metadata::export(&config)?,

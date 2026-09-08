@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { createHash } from "node:crypto";
 import path from "node:path";
 import { typescriptFiles } from "./contracts/typescript.mjs";
 import { goNodes } from "./contracts/go.mjs";
@@ -16,16 +15,14 @@ const files = await typescriptFiles(manifest, input);
 files.set("go/nodes_generated.go", goNodes(entries));
 for (const [name, source] of presetFiles(manifest.presets))
   files.set(name, source);
-const hash = createHash("sha256")
-  .update(await readFile("dist/parser.wasm"))
-  .digest("hex");
+
 files.set(
   "typescript/generated/artifact.ts",
-  `// Generated for this Wasm build. Do not edit.\nexport const sha256 = '${hash}';\nexport const inputBytes = ${manifest.limits.inputBytes};\n`,
+  `// Generated for this Wasm build. Do not edit.\nexport const buildId = '${manifest.buildId}';\nexport const inputBytes = ${manifest.limits.inputBytes};\n`,
 );
 files.set(
   "go/artifact_generated.go",
-  `// Code generated for this Wasm build. DO NOT EDIT.\npackage markdown\nconst artifactSHA256 = "${hash}"\nconst inputBytes = ${manifest.limits.inputBytes}\nconst memoryPages = ${manifest.limits.memoryBytes / 65536}\n`,
+  `// Code generated for this Wasm build. DO NOT EDIT.\npackage markdown\nconst buildID = "${manifest.buildId}"\nconst inputBytes = ${manifest.limits.inputBytes}\nconst memoryPages = ${manifest.limits.memoryBytes / 65536}\n`,
 );
 for (const [name, source] of files) {
   await mkdir(path.dirname(name), { recursive: true });
