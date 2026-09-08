@@ -7,11 +7,11 @@ publish.workspace = true
 description = "Parse once, render notification text and extract references in Rust."
 
 [features]
-contracts = ["dep:ts-rs", "dep:schemars", "markdown-traq-processing/contracts"]
+contracts = ["dep:ts-rs", "dep:schemars", "traq-markdown-processing/contracts"]
 
 [dependencies]
-markdown-traq = { path = "../traq" }
-markdown-traq-processing = { path = "../traq-processing" }
+traq-markdown-grammar = { path = "../grammar" }
+traq-markdown-processing = { path = "../processing" }
 markdown-renderer = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
 markdown-extractor = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
 serde = { version = "1", features = ["derive"] }

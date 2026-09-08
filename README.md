@@ -12,8 +12,8 @@ traQ 向けの Markdown 文法・通知処理の構成と、Rust・WebAssembly�
 
 | 場所 | 責任 |
 | --- | --- |
-| `crates/traq` | CommonMark・汎用拡張・traP 拡張を選択し、文法プリセットを構成 |
-| `crates/traq-processing` | 通知の表示方針と参照抽出のプリセットを構成 |
+| `crates/grammar` | CommonMark・汎用拡張・traP 拡張を選択し、文法プリセットを構成 |
+| `crates/processing` | 通知の表示方針と参照抽出のプリセットを構成 |
 | `crates/processor` | 一度の解析から通知テキストと参照一覧を生成 |
 | `crates/wasm` | 配布する文法・ノード型・処理 API を Wasm として公開 |
 | `go`・`typescript`・`scripts/contracts` | この配布物に対応する bindings と型生成 |

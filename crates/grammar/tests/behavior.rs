@@ -1,6 +1,6 @@
 use markdown_commonmark_contracts::{Link, Text};
 use markdown_parser::{Limits, Node, ParseError};
-use markdown_traq::presets;
+use traq_markdown_grammar::presets;
 
 fn has_link(nodes: &[Node]) -> bool {
     nodes

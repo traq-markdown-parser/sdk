@@ -8,7 +8,7 @@ mod processing;
 mod node_types;
 mod nodes;
 use buffers::IO;
-use markdown_traq::{ParseError, Parser};
+use traq_markdown_grammar::{ParseError, Parser};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_version() -> u32 {

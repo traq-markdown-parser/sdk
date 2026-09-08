@@ -1,9 +1,9 @@
 use markdown_extractor::Extractor;
 use markdown_renderer::Renderer;
-use markdown_traq_processing::presets::traq::v1;
+use traq_markdown_processing::presets::traq::v1;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let parser = markdown_traq::presets::traq::v1::parser();
+    let parser = traq_markdown_grammar::presets::traq::v1::parser();
     let renderer = Renderer::new(&v1::notification::preset("https://q.example.test")?);
     let extractor = Extractor::new(&v1::references::preset()?);
 

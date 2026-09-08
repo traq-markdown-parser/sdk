@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     builder.add(&spoiler)?;
     let customized = Renderer::new(&builder.build()?);
 
-    let parser = markdown_traq::presets::traq::v1::parser();
+    let parser = traq_markdown_grammar::presets::traq::v1::parser();
     let document = parser.parse("**こんにちは** !!秘密!! :stamp:")?;
     let original = original.render(&document)?;
     let customized = customized.render(&document)?;

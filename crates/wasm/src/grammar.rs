@@ -1,6 +1,6 @@
 use super::buffers::IO;
-use markdown_traq::{Grammar, bindings, engine::BuildError};
 use std::cell::RefCell;
+use traq_markdown_grammar::{Grammar, bindings, engine::BuildError};
 
 thread_local! { static GRAMMAR: RefCell<Option<Grammar>> = const { RefCell::new(None) }; }
 

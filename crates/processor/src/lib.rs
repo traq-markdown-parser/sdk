@@ -3,9 +3,9 @@
 
 use markdown_extractor::Extractor;
 use markdown_renderer::Renderer;
-use markdown_traq::Parser;
-use markdown_traq_processing::{References, presets::traq::v1};
 use serde::{Deserialize, Serialize};
+use traq_markdown_grammar::Parser;
+use traq_markdown_processing::{References, presets::traq::v1};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 #[cfg_attr(feature = "contracts", derive(ts_rs::TS, schemars::JsonSchema))]
@@ -42,7 +42,7 @@ impl Processor {
     pub fn new(preset: ProcessorPreset, options: ProcessorOptions) -> Result<Self, &'static str> {
         match preset {
             ProcessorPreset::TraQV1 => Ok(Self {
-                parser: markdown_traq::presets::traq::v1::parser(),
+                parser: traq_markdown_grammar::presets::traq::v1::parser(),
                 renderer: Renderer::new(&v1::notification::preset(&options.origin)?),
                 extractor: Extractor::new(&v1::references::preset()?),
             }),

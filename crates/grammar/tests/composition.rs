@@ -1,6 +1,6 @@
 use markdown_commonmark_contracts::{HtmlInline, Text};
 use markdown_generic_syntax::math::InlineMathData;
-use markdown_traq::{Parser, presets, syntax::extensions};
+use traq_markdown_grammar::{Parser, presets, syntax::extensions};
 
 #[test]
 fn removing_an_extension_does_not_change_an_existing_parser() {

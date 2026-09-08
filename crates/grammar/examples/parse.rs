@@ -1,5 +1,5 @@
 use markdown_commonmark_contracts::Text;
-use markdown_traq::{Node, Parser, presets, syntax::extensions};
+use traq_markdown_grammar::{Node, Parser, presets, syntax::extensions};
 
 fn print_text(nodes: &[Node]) {
     for node in nodes {

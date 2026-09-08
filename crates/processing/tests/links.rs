@@ -1,5 +1,5 @@
 use markdown_renderer::Renderer;
-use markdown_traq_processing::presets::traq::v1::notification;
+use traq_markdown_processing::presets::traq::v1::notification;
 
 const ID: &str = "00000000-0000-0000-0000-000000000001";
 
@@ -9,7 +9,7 @@ fn targets_are_independent_of_display_policy() {
     let renderer = notification::preset(origin)
         .map(|p| Renderer::new(&p))
         .unwrap();
-    let parser = markdown_traq::presets::traq::v1::parser();
+    let parser = traq_markdown_grammar::presets::traq::v1::parser();
     for (path, label) in [
         ("files", "[添付ファイル]"),
         ("messages", "[引用メッセージ]"),

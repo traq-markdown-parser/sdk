@@ -25,3 +25,19 @@ alias package is provided. Rust package names and AST type keys remain unchanged
 `crates/traq`, `crates/traq-processing` and the text composition example moved
 here from the extension repository at `bf220c640d23f39e33fa0a52147cdf3bd32998ff`.
 The Wasm build ID also covers the source and manifests of those local crates.
+
+## Crate roles (2026-09-08)
+
+Within this repository the grammar and processing preset crates now use their
+roles as directory and package names:
+
+| Previous directory / Rust package | Current directory / Rust package |
+| --- | --- |
+| `crates/traq` / `markdown-traq` | `crates/grammar` / `traq-markdown-grammar` |
+| `crates/traq-processing` / `markdown-traq-processing` | `crates/processing` / `traq-markdown-processing` |
+
+Rust imports become `traq_markdown_grammar` and `traq_markdown_processing`.
+`processor` still combines parsing with notification rendering and reference
+extraction; `processing` provides the presets consumed by those operations.
+The Go/TypeScript API and AST type keys are unchanged. Rebuild Wasm and bindings
+together because the source paths and manifests participate in the build ID.

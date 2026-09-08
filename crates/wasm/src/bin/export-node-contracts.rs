@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = ts_rs::Config::default()
         .with_out_dir(&directory)
         .with_import_extension(Some("js"));
-    <markdown_traq::ParseError as ts_rs::TS>::export_all(&config)?;
+    <traq_markdown_grammar::ParseError as ts_rs::TS>::export_all(&config)?;
     let mut processing = serde_json::Map::new();
     macro_rules! processing_type {
         ($($ty:ident),*) => {$(
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manifest = serde_json::json!({
         "buildId": env!("MARKDOWN_BUILD_ID"),
         "processing": processing,
-        "presets": markdown_traq::bindings::bundled().exports["presets"],
+        "presets": traq_markdown_grammar::bindings::bundled().exports["presets"],
         "limits": {"inputBytes": limits::MAX_INPUT, "outputBytes": limits::MAX_OUTPUT, "memoryBytes": limits::MEMORY_BYTES},
         "nodes": node_metadata::export(&config)?,
     });

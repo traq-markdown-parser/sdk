@@ -249,35 +249,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "markdown-traq"
-version = "0.1.0"
-dependencies = [
- "markdown-commonmark",
- "markdown-commonmark-contracts",
- "markdown-definitions",
- "markdown-generic-syntax",
- "markdown-parser",
- "markdown-trap-syntax",
- "serde_json",
-]
-
-[[package]]
-name = "markdown-traq-processing"
-version = "0.1.0"
-dependencies = [
- "markdown-commonmark-contracts",
- "markdown-commonmark-text",
- "markdown-extractor",
- "markdown-generic-text",
- "markdown-renderer",
- "markdown-trap-contracts",
- "markdown-trap-extraction",
- "markdown-trap-text",
- "markdown-traq",
- "serde_json",
-]
-
-[[package]]
 name = "mdurl"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -555,8 +526,37 @@ dependencies = [
 name = "traq-markdown-example"
 version = "0.1.0"
 dependencies = [
- "markdown-traq",
+ "traq-markdown-grammar",
  "traq-markdown-processor",
+]
+
+[[package]]
+name = "traq-markdown-grammar"
+version = "0.1.0"
+dependencies = [
+ "markdown-commonmark",
+ "markdown-commonmark-contracts",
+ "markdown-definitions",
+ "markdown-generic-syntax",
+ "markdown-parser",
+ "markdown-trap-syntax",
+ "serde_json",
+]
+
+[[package]]
+name = "traq-markdown-processing"
+version = "0.1.0"
+dependencies = [
+ "markdown-commonmark-contracts",
+ "markdown-commonmark-text",
+ "markdown-extractor",
+ "markdown-generic-text",
+ "markdown-renderer",
+ "markdown-trap-contracts",
+ "markdown-trap-extraction",
+ "markdown-trap-text",
+ "serde_json",
+ "traq-markdown-grammar",
 ]
 
 [[package]]
@@ -565,11 +565,11 @@ version = "0.1.0"
 dependencies = [
  "markdown-extractor",
  "markdown-renderer",
- "markdown-traq",
- "markdown-traq-processing",
  "schemars",
  "serde",
  "serde_json",
+ "traq-markdown-grammar",
+ "traq-markdown-processing",
  "ts-rs",
 ]
 
@@ -584,10 +584,10 @@ dependencies = [
  "markdown-generic-contracts",
  "markdown-parser",
  "markdown-trap-contracts",
- "markdown-traq",
  "schemars",
  "serde",
  "serde_json",
+ "traq-markdown-grammar",
  "traq-markdown-processor",
  "ts-rs",
 ]

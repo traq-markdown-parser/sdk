@@ -6,7 +6,7 @@
 ```rust
 use markdown_extractor::Extractor;
 use markdown_renderer::Renderer;
-use markdown_traq_processing::presets::traq::v1;
+use traq_markdown_processing::presets::traq::v1;
 
 let renderer = Renderer::new(&v1::notification::preset("https://q.example.test")?);
 let extractor = Extractor::new(&v1::references::preset()?);
@@ -16,7 +16,7 @@ let references = extractor.extract(&document)?;
 ```
 
 実行可能な例は [examples/notification.rs](examples/notification.rs) にあります。
-リポジトリ root で `cargo run -p markdown-traq-processing --example notification` を実行してください。
+リポジトリ root で `cargo run -p traq-markdown-processing --example notification` を実行してください。
 AST の JSON 変換を挟まず、最終結果だけを JSON として出力します。
 
 `notification::builder(origin)` / `references::builder()` は編集可能な builder を返します。

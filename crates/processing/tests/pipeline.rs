@@ -1,10 +1,10 @@
 use markdown_extractor::Extractor;
 use markdown_renderer::Renderer;
-use markdown_traq_processing::{References, presets::traq::v1};
+use traq_markdown_processing::{References, presets::traq::v1};
 
 #[test]
 fn one_ast_supports_hidden_notifications_and_reference_collection() {
-    let parser = markdown_traq::presets::traq::v1::parser();
+    let parser = traq_markdown_grammar::presets::traq::v1::parser();
     let renderer = Renderer::new(&v1::notification::preset("").unwrap());
     let extractor = Extractor::new(&v1::references::preset().unwrap());
     let id = "00000000-0000-0000-0000-000000000001";
@@ -33,7 +33,7 @@ fn one_ast_supports_hidden_notifications_and_reference_collection() {
 
 #[test]
 fn preset_configuration_is_independent_and_bounded() {
-    let parser = markdown_traq::presets::traq::v1::parser();
+    let parser = traq_markdown_grammar::presets::traq::v1::parser();
     let source = "https://q.example.test/files/00000000-0000-0000-0000-000000000001";
     let document = parser.parse(source).unwrap();
     let special = Renderer::new(&v1::notification::preset("https://q.example.test").unwrap());

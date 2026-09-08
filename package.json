@@ -46,7 +46,7 @@
     "typecheck": "tsc -p typescript/tsconfig.json --noEmit && tsc -p examples/typescript/tsconfig.json",
     "test:rust": "cargo test --workspace --all-features",
     "test:go": "go -C go test -count=1 ./...",
-    "example:rust": "cargo run -p traq-markdown-example && cargo run -p markdown-traq --example parse && cargo run -p markdown-traq-processing --example notification && cargo run -p markdown-traq-processing --example compose-text",
+    "example:rust": "cargo run -p traq-markdown-example && cargo run -p traq-markdown-grammar --example parse && cargo run -p traq-markdown-processing --example notification && cargo run -p traq-markdown-processing --example compose-text",
     "example:go": "go -C examples/go run .",
     "example:ts": "node examples/typescript/main.mts",
     "examples": "npm run example:rust && npm run example:go && npm run example:ts",

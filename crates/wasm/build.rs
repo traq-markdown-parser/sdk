@@ -30,10 +30,10 @@ fn main() {
     let mut hash = DefaultHasher::new();
     for path in [
         "src",
-        "../traq/src",
-        "../traq/Cargo.toml",
-        "../traq-processing/src",
-        "../traq-processing/Cargo.toml",
+        "../grammar/src",
+        "../grammar/Cargo.toml",
+        "../processing/src",
+        "../processing/Cargo.toml",
         "../processor/src",
         "../processor/Cargo.toml",
         "build.rs",

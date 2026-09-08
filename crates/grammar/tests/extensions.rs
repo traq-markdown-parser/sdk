@@ -7,7 +7,7 @@ use markdown_parser::{
         inline::{InlineMatch, InlineRule, TextMatch, TextRule},
     },
 };
-use markdown_traq::presets;
+use traq_markdown_grammar::presets;
 #[derive(Debug, Clone, PartialEq)]
 struct Note {
     title: String,

@@ -11,8 +11,8 @@ fn exported_types_cover_public_fixtures_and_roundtrip_the_native_tree() {
     let metadata =
         crate::node_metadata::export(&ts_rs::Config::default().with_out_dir(output)).unwrap();
     assert_eq!(metadata.as_object().unwrap().len(), 28);
-    let commonmark = markdown_traq::presets::commonmark::parser();
-    let traq = markdown_traq::presets::traq::v1::parser();
+    let commonmark = traq_markdown_grammar::presets::commonmark::parser();
+    let traq = traq_markdown_grammar::presets::traq::v1::parser();
     let mut count = 0;
     for (file, parser) in [
         ("commonmark-0.31.2.json", &commonmark),

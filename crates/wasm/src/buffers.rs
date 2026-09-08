@@ -1,9 +1,9 @@
-use markdown_traq::ParseError;
 use serde::{Serialize, ser::SerializeMap};
 use std::{
     cell::RefCell,
     io::{self, Write},
 };
+use traq_markdown_grammar::ParseError;
 
 use crate::limits::{MAX_INPUT, MAX_OUTPUT};
 #[derive(Default)]

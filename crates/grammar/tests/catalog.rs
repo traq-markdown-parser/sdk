@@ -1,5 +1,5 @@
 use markdown_parser::{Parser, bindings::Composition};
-use markdown_traq::{bindings::bundled, presets};
+use traq_markdown_grammar::{bindings::bundled, presets};
 
 #[test]
 fn bundled_compositions_preserve_presets_and_validate_untrusted_recipes() {
