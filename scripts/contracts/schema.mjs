@@ -1,6 +1,6 @@
 // Accept only the schema forms emitted for the supported payload types.
 // Context-specific checks prevent silently discarding combined constraints.
-const metadata = ["$schema", "$defs", "title", "description"];
+const metadata = ["$schema", "$defs", "title", "description", "default"];
 function keys(schema, allowed) {
   for (const key of Object.keys(schema))
     if (!metadata.includes(key) && !allowed.includes(key))
@@ -17,7 +17,10 @@ export function shape(schema, root = schema, references = new Set()) {
       throw new Error("Recursive payload schemas are unsupported");
     const target = root.$defs?.[schema.$ref.slice(8)];
     if (!target) throw new Error("Unresolved schema reference: " + schema.$ref);
-    return shape(target, root, new Set([...references, schema.$ref]));
+    return {
+      ...shape(target, root, new Set([...references, schema.$ref])),
+      name: schema.$ref.slice(8),
+    };
   }
   if (schema.anyOf || Array.isArray(schema.type)) {
     keys(schema, schema.anyOf ? ["anyOf"] : ["type"]);
@@ -49,9 +52,22 @@ export function shape(schema, root = schema, references = new Set()) {
     keys(schema, ["type", "format", "minimum", "maximum"]);
     const ranges = { uint8: [0, 255], uint32: [0, 0xffffffff] };
     const range = ranges[schema.format];
-    if (!range || schema.minimum !== range[0] || (schema.maximum ?? range[1]) !== range[1])
+    if (
+      !range ||
+      schema.minimum !== range[0] ||
+      (schema.maximum ?? range[1]) !== range[1]
+    )
       throw new Error("Unsupported integer representation or constraints");
-    return { kind: "integer", format: schema.format, min: range[0], max: range[1] };
+    return {
+      kind: "integer",
+      format: schema.format,
+      min: range[0],
+      max: range[1],
+    };
+  }
+  if (schema.type === "array") {
+    keys(schema, ["type", "items"]);
+    return { kind: "array", items: shape(schema.items, root, references) };
   }
   if (schema.type === "object") {
     keys(schema, ["type", "properties", "required", "additionalProperties"]);

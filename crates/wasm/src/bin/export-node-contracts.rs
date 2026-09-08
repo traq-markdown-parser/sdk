@@ -22,10 +22,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_out_dir(&directory)
         .with_import_extension(Some("js"));
     <markdown_traq::ParseError as ts_rs::TS>::export_all(&config)?;
+    let mut processing = serde_json::Map::new();
+    macro_rules! processing_type {
+        ($($ty:ident),*) => {$(
+            <traq_markdown_processor::$ty as ts_rs::TS>::export_all(&config)?;
+            let schema = schemars::generate::SchemaSettings::default()
+                .with(|settings| settings.contract = schemars::generate::Contract::Serialize)
+                .into_generator().into_root_schema_for::<traq_markdown_processor::$ty>();
+            processing.insert(stringify!($ty).into(), serde_json::to_value(schema)?);
+        )*};
+    }
+    processing_type!(ProcessorPreset, ProcessorOptions, ProcessOutput);
     // Check that metadata and codec registrations agree before writing bindings.
     let _ = nodes::codec();
     let manifest = serde_json::json!({
         "buildId": env!("MARKDOWN_BUILD_ID"),
+        "processing": processing,
         "presets": markdown_traq::bindings::bundled().exports["presets"],
         "limits": {"inputBytes": limits::MAX_INPUT, "outputBytes": limits::MAX_OUTPUT, "memoryBytes": limits::MEMORY_BYTES},
         "nodes": node_metadata::export(&config)?,

@@ -16,23 +16,29 @@ function named(tree, path = []) {
     ]),
   );
 }
-export function presetFiles(tree) {
+export function presetFiles(
+  tree,
+  type = "Preset",
+  value = "presets",
+  file = "presets",
+) {
   const paths = leaves(tree);
   const goName = (part) =>
     ({ traq: "TraQ", commonmark: "CommonMark" })[part] ??
     part[0].toUpperCase() + part.slice(1);
   return new Map([
     [
-      "typescript/generated/presets.ts",
+      `typescript/generated/${file}.ts`,
       "// Generated from Rust preset exports. Do not edit.\n" +
-        `export type Preset = ${paths.map((p) => q(p.join("."))).join(" | ")};\nexport const presets = ${q(named(tree))} as const;\n`,
+        `export type ${type} = ${paths.map((p) => q(p.join("."))).join(" | ")};\nexport const ${value} = ${q(named(tree))} as const;\n`,
     ],
     [
-      "go/presets_generated.go",
-      "// Code generated from Rust preset exports. DO NOT EDIT.\npackage markdown\ntype Preset string\nconst (\n" +
+      `go/${file}_generated.go`,
+      `// Code generated from Rust preset exports. DO NOT EDIT.\npackage markdown\ntype ${type} string\nconst (\n` +
         paths
           .map(
-            (p) => `Preset${p.map(goName).join("")} Preset = ${q(p.join("."))}`,
+            (p) =>
+              `${type}${p.map(goName).join("")} ${type} = ${q(p.join("."))}`,
           )
           .join("\n") +
         "\n)\n",

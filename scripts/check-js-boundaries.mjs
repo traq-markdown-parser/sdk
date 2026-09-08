@@ -23,3 +23,8 @@ for (const file of [
 console.log(
   "Thin bindings: two handwritten TypeScript files, no runtime package dependencies",
 );
+
+const { execFileSync } = await import("node:child_process");
+const dependencies = execFileSync("cargo", ["tree", "--locked", "-p", "traq-markdown-processor", "--edges", "normal"], { cwd: root, encoding: "utf8" });
+assert(!dependencies.includes("markdown-codec"), "Native processing must borrow the AST without a codec dependency");
+console.log("Native processing: no AST codec dependency");

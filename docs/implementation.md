@@ -62,7 +62,7 @@ AST の構造・意味・資源制限は Rust の parser と codec が検証し�
 
 生成器は object、string、boolean、文字列 enum、nullable、u8 / u32 を扱います。未対応の形・制約や payload 型名の衝突は生成エラーです。新しい形を追加する場合は生成器を拡張します。通常のノードやプリセット追加では手書きのホスト実装を変更しません。
 
-Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小さな通信面です。一つの instance が一つの文法を所有します。入力上限 64 KiB、出力上限 1 MiB、memory 上限 32 MiB を Rust で定義し、ホストに必要な上限も生成します。
+Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小さな通信面です。各ホスト instance は Parser または Processor を所有します。入力上限 64 KiB、出力上限 1 MiB、memory 上限 32 MiB を Rust で定義し、ホストに必要な上限も生成します。
 
 ビルド ID は Rust ソース、Cargo.lock、manifest と固定 toolchain 設定の内容から生成する不一致検出用の値です。改行とパス表記を正規化し、ビルド環境が違っても同じ値になります。配布物の真正性を証明する署名ではありません。`dist/contract.json` は診断用に実際の Wasm の SHA-256 も記録します。
 
@@ -71,3 +71,13 @@ Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小
 [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it) は受け取った Document から HTML を作ります。レンダラーの Plugin 宣言はそのパッケージが所有します。文法を構成する Rust の Plugin とは別の API です。
 
 通知・参照抽出のネイティブ Rust API は [traq-processing](https://github.com/traq-markdown-parser/trap/tree/main/crates/traq-processing) にあります。保存済みメッセージの文法版は利用側で管理し、原文を対応するプリセットで再解析します。永続 AST の互換層は設けません。
+
+## Processing pipeline
+
+`crates/processor` composes the Rust parser, notification renderer and reference extractor. `Processor::process` parses once and lends the same native Document to both consumers; it does not depend on the AST codec. The reusable renderer and extractor implementations remain in core/commonmark/trap, independent of the SDK transport.
+
+Wasm additionally exports `configure_processor` and `process`. Configuration selects a Rust `ProcessorPreset` and `ProcessorOptions`; processing accepts the original UTF-8 source and returns `{result: ProcessOutput}` or `{error: string}`. No AST is serialized in this path. Processing errors currently carry a message, without a stable machine-readable classification. Applications must not classify those errors by matching their text.
+
+The generated result contains `notificationText` and `references.{mentions,groupMentions,channelLinks}`. Go generates named nested structures and arrays from schemars; TypeScript declarations come from ts-rs. New processing options, output fields and preset variants are generated without modifying host transports. Unsupported schema constraints fail generation.
+
+The source, output and memory bounds also apply to processors. The Go cancellation and instance disposal rules above apply to both instance types; disposal of a Runtime closes all its parsers and processors. An empty origin leaves file/message URLs as text. Notification rendering, attachment/citation ID extraction and Bot PlainText are separate policies: this pipeline provides only notification rendering and user/group/channel reference extraction.

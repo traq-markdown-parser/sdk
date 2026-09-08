@@ -1,0 +1,22 @@
+[package]
+name = "traq-markdown-processor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Parse once, render notification text and extract references in Rust."
+
+[features]
+contracts = ["dep:ts-rs", "dep:schemars", "markdown-traq-processing/contracts"]
+
+[dependencies]
+markdown-traq = { git = "https://github.com/traq-markdown-parser/trap.git", rev = "bf220c640d23f39e33fa0a52147cdf3bd32998ff", version = "0.1.0" }
+markdown-traq-processing = { git = "https://github.com/traq-markdown-parser/trap.git", rev = "bf220c640d23f39e33fa0a52147cdf3bd32998ff", version = "0.1.0" }
+markdown-renderer = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+markdown-extractor = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+serde = { version = "1", features = ["derive"] }
+ts-rs = { version = "12", optional = true, features = ["serde-json-impl"] }
+schemars = { version = "1.2.2", optional = true }
+
+[dev-dependencies]
+serde_json = "1"

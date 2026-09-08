@@ -58,3 +58,5 @@ markdown-codec = { path = "/absolute/path/to/core/crates/codec" }
 Pass the file with `cargo --config /absolute/path/to/local.toml ...`; use equivalent absolute Windows paths on Windows. Do not commit local overrides or the resulting lockfile changes. Release verification uses the committed revisions without patches.
 
 Fixtures contain no production messages or credentials. Their provenance and update policy are documented in [tests/fixtures](tests/fixtures/README.md).
+
+`crates/processor` owns the distribution's processing presets. Processing contract types are exported alongside AST contracts, including referenced objects and arrays. Its normal dependency tree must not include `markdown-codec`; notification rendering and extraction borrow the native AST. The notification corpus has 787 frozen expectations, exercised by native Rust, Go/Wasm and TypeScript/Wasm. Package consumers and all three examples also exercise the processing API.

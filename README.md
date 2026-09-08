@@ -67,3 +67,35 @@ TypeScript の `presets.commonmark` / `presets.traq.v1`、Go の `PresetCommonMa
 HTML / CSS は [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it) が担当します。
 
 [API と実装](docs/implementation.md)、[実行例](examples/README.md)、[開発と検証](CONTRIBUTING.md) を参照してください。
+
+## 通知テキストと参照抽出
+
+`Processor` は原文を一度だけ Rust AST に解析し、その AST を通知用レンダラーと参照抽出器が借用します。ホストとの間では最終結果だけを渡します。
+
+```ts
+import { createRuntime, processors } from '@traq-markdown-parser/ts'
+
+const runtime = await createRuntime(wasmBytes)
+try {
+  const processor = runtime.createProcessor(processors.traq.v1, {
+    origin: 'https://q.example.test',
+  })
+  const { notificationText, references } = processor.process('**hello** !!secret!!')
+  // notificationText: "hello ██████"
+  // references: { mentions: [], groupMentions: [], channelLinks: [] }
+} finally {
+  runtime.dispose()
+}
+```
+
+```go
+processor, err := runtime.NewProcessor(ctx, markdown.ProcessorPresetTraQV1,
+    markdown.ProcessorOptions{Origin: "https://q.example.test"})
+if err != nil { return err }
+defer processor.Close(ctx)
+result, err := processor.Process(ctx, "**hello** !!secret!!")
+```
+
+Parser と Processor は同じ Runtime のコンパイル結果を共有し、独立した instance と設定を持ちます。Processor のライフサイクルと Go の直列化・キャンセル規則は Parser と同じです。プリセット・設定・結果の型は Rust から生成します。ネイティブ Rust では `traq-markdown-processor` crate の `Processor` を使います。
+
+通知は spoiler をマスクし、空白を正規化した一行のテキストです。参照はユーザー・グループ・チャンネルの UUID を種類別に返し、文書順・重複・spoiler 内の参照を保持します。コード内の文字列は参照として抽出しません。`origin` は通知中の traQ 添付・引用 URL の表示判定用です。添付・引用 ID の抽出と Bot 用 PlainText はこの API の対象外で、アプリ側の方針として残ります。

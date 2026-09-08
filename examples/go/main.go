@@ -42,5 +42,19 @@ func run(path string) error {
 		return err
 	}
 	fmt.Println(string(raw))
+	processor, err := runtime.NewProcessor(ctx, markdown.ProcessorPresetTraQV1, markdown.ProcessorOptions{Origin: "https://q.example.test"})
+	if err != nil {
+		return err
+	}
+	defer processor.Close(ctx)
+	result, err := processor.Process(ctx, "**hello** !!secret!!")
+	if err != nil {
+		return err
+	}
+	raw, err = json.Marshal(result)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(raw))
 	return nil
 }

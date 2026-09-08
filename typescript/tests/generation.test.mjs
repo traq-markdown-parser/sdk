@@ -32,3 +32,37 @@ test('new Rust-exported payloads and presets generate both host APIs', async () 
     await rm(directory,{recursive:true,force:true});
   }
 });
+
+test('Rust processing options, nested results and presets generate without host changes', async () => {
+  const { processingFiles } = await import('../../scripts/contracts/processing.mjs');
+  const directory = await mkdtemp(path.join(tmpdir(), 'processing-contract-'));
+  try {
+    const object = (title, properties) => ({title, type:'object', additionalProperties:false, properties, required:Object.keys(properties)});
+    const details = object('Details', {labels:{type:'array',items:{type:'string'}}});
+    const options = object('ProcessorOptions', {compact:{type:'boolean'},details:{$ref:'#/$defs/Details'}});
+    options.$defs = {Details:details};
+    const output = object('ProcessOutput', {details:{$ref:'#/$defs/Details'}, batches:{type:'array',items:{$ref:'#/$defs/Details'}}});
+    output.$defs = {Details:details};
+    await writeFile(path.join(directory,'ProcessorOptions.ts'), 'import type { Details } from "./Details.js";\nexport type ProcessorOptions = { compact:boolean; details:Details };');
+    await writeFile(path.join(directory,'ProcessOutput.ts'), 'import type { Details } from "./Details.js";\nexport type ProcessOutput = { details:Details; batches:Array<Details> };');
+    await writeFile(path.join(directory,'Details.ts'), 'export type Details = { labels:Array<string> };');
+    const schemas = {ProcessorPreset:{type:'string',enum:['traq.v1','custom.compact']},ProcessorOptions:options,ProcessOutput:output};
+    const files = await processingFiles(schemas,directory);
+    const go = files.get('go/processing_generated.go');
+    assert.match(go,/ProcessorPresetCustomCompact ProcessorPreset = "custom.compact"/);
+    assert.match(go,/Compact bool/);
+    assert.match(go,/Batches \[\]Details/);
+    assert.match(go,/Labels \[\]string/);
+    assert.equal(go.match(/type Details struct/g).length,1);
+    const ts = files.get('typescript/generated/processing.ts');
+    assert.match(ts,/"custom.compact"/);
+    assert.match(ts,/compact:boolean/);
+    assert.match(ts,/batches:Array<Details>/);
+    assert.equal(ts.match(/export type Details/g).length,1);
+    output.$defs = {Details:object('Details',{other:{type:'boolean'}})};
+    await assert.rejects(processingFiles(schemas,directory),/Conflicting processing type/);
+  } finally {
+    if (path.dirname(directory) !== path.resolve(tmpdir())) throw new Error('Unexpected temporary path');
+    await rm(directory,{recursive:true,force:true});
+  }
+});

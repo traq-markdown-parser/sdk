@@ -4,6 +4,7 @@ import path from "node:path";
 import { typescriptFiles } from "./contracts/typescript.mjs";
 import { goNodes } from "./contracts/go.mjs";
 import { presetFiles } from "./contracts/presets.mjs";
+import { processingFiles } from "./contracts/processing.mjs";
 
 const input = path.resolve(process.argv[2] ?? "target/node-contracts");
 const manifest = JSON.parse(await readFile(path.join(input, "contracts.json")));
@@ -14,6 +15,8 @@ const entries = Object.entries(manifest.nodes).map(([key, node]) => [
 const files = await typescriptFiles(manifest, input);
 files.set("go/nodes_generated.go", goNodes(entries));
 for (const [name, source] of presetFiles(manifest.presets))
+  files.set(name, source);
+for (const [name, source] of await processingFiles(manifest.processing, input))
   files.set(name, source);
 
 files.set(

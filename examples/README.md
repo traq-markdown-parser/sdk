@@ -15,3 +15,5 @@ Rust resolves the pinned `markdown-traq` Git dependency. Go uses a local `replac
 The Go example accepts `-wasm /path/to/parser.wasm`. TypeScript uses `readFile` in Node.js; browser applications can pass `new Uint8Array(await response.arrayBuffer())` to `createRuntime(bytes)`, then use `runtime.createParser(presets.traq.v1)`.
 
 HTML rendering examples live in [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it). Native notification and extraction examples live in [trap](https://github.com/traq-markdown-parser/trap/tree/main/crates/traq-processing/examples).
+
+Each example also processes a message into notification text and reference lists. Native Rust uses the local `traq-markdown-processor` crate. Go and TypeScript create a Processor from the same Runtime as their Parser.

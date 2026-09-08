@@ -1,3 +1,4 @@
+import {processors, type ProcessOutput} from "@traq-markdown-parser/ts";
 import {
   createRuntime,
   presets,
@@ -22,4 +23,12 @@ if (isKnownNode(unknownNode) && unknownNode.kind === names.Reference) {
 }
 // @ts-expect-error Only Rust-exported presets are accepted
 runtime.createParser("not-exported");
+const processor = runtime.createProcessor(processors.traq.v1, {origin:""});
+const output: ProcessOutput = processor.process("hello");
+const mentions: string[] = output.references.mentions;
+void mentions;
+// @ts-expect-error Processor has no host AST parsing API
+processor.parse("x");
+// @ts-expect-error Options are generated from Rust
+runtime.createProcessor(processors.traq.v1, {origin:4});
 runtime.dispose();

@@ -8,7 +8,16 @@ function goType(s) {
   if (s.kind === "boolean") return "bool";
   if (s.kind === "integer") return s.format;
   if (s.kind === "nullable") return "*" + goType(s.inner);
+  if (s.kind === "array") return "[]" + goType(s.items);
+  if (s.kind === "object") return s.name ?? `struct {${fields(s)}}`;
   throw new Error("Unsupported Go field: " + s.kind);
+}
+const fields = (s) =>
+  s.fields
+    .map((f) => `${fieldName(f.name)} ${goType(f.shape)} \`json:${q(f.name)}\``)
+    .join("\n");
+export function goContract(schema, root = schema) {
+  return `type ${typeName(schema)} struct {\n${fields(shape(schema, root))}\n}\n`;
 }
 export function goPayload(wireName, schema) {
   const name = typeName(schema),

@@ -3,6 +3,7 @@ mod buffers;
 mod contract;
 mod grammar;
 mod limits;
+mod processing;
 #[macro_use]
 mod node_types;
 mod nodes;

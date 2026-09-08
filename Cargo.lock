@@ -109,6 +109,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "markdown-commonmark-text"
+version = "0.1.0"
+source = "git+https://github.com/traq-markdown-parser/commonmark.git?rev=00fdb814d980ee4e326eb6a05d8ff4bba289d291#00fdb814d980ee4e326eb6a05d8ff4bba289d291"
+dependencies = [
+ "markdown-ast",
+ "markdown-commonmark-contracts",
+ "markdown-renderer",
+]
+
+[[package]]
 name = "markdown-definitions"
 version = "0.1.0"
 source = "git+https://github.com/traq-markdown-parser/core.git?rev=1ccba0a7a63f7128873b4490e8f0b1c5b8714099#1ccba0a7a63f7128873b4490e8f0b1c5b8714099"
@@ -125,6 +135,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "markdown-extractor"
+version = "0.1.0"
+source = "git+https://github.com/traq-markdown-parser/core.git?rev=1ccba0a7a63f7128873b4490e8f0b1c5b8714099#1ccba0a7a63f7128873b4490e8f0b1c5b8714099"
+dependencies = [
+ "markdown-ast",
+ "markdown-definitions",
 ]
 
 [[package]]
@@ -153,6 +172,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "markdown-generic-text"
+version = "0.1.0"
+source = "git+https://github.com/traq-markdown-parser/commonmark.git?rev=00fdb814d980ee4e326eb6a05d8ff4bba289d291#00fdb814d980ee4e326eb6a05d8ff4bba289d291"
+dependencies = [
+ "markdown-ast",
+ "markdown-generic-contracts",
+ "markdown-renderer",
+]
+
+[[package]]
 name = "markdown-parser"
 version = "0.1.0"
 source = "git+https://github.com/traq-markdown-parser/core.git?rev=1ccba0a7a63f7128873b4490e8f0b1c5b8714099#1ccba0a7a63f7128873b4490e8f0b1c5b8714099"
@@ -165,9 +194,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "markdown-renderer"
+version = "0.1.0"
+source = "git+https://github.com/traq-markdown-parser/core.git?rev=1ccba0a7a63f7128873b4490e8f0b1c5b8714099#1ccba0a7a63f7128873b4490e8f0b1c5b8714099"
+dependencies = [
+ "markdown-ast",
+ "markdown-definitions",
+]
+
+[[package]]
 name = "markdown-trap-contracts"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=e687f0e7e249b4f428e94a2bcd478abcf8de55d6#e687f0e7e249b4f428e94a2bcd478abcf8de55d6"
+source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
 dependencies = [
  "markdown-ast",
  "markdown-definitions",
@@ -177,9 +215,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "markdown-trap-extraction"
+version = "0.1.0"
+source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
+dependencies = [
+ "markdown-extractor",
+ "markdown-trap-contracts",
+ "schemars",
+ "serde",
+ "ts-rs",
+]
+
+[[package]]
 name = "markdown-trap-syntax"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=e687f0e7e249b4f428e94a2bcd478abcf8de55d6#e687f0e7e249b4f428e94a2bcd478abcf8de55d6"
+source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
 dependencies = [
  "markdown-commonmark",
  "markdown-definitions",
@@ -190,15 +240,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "markdown-trap-text"
+version = "0.1.0"
+source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
+dependencies = [
+ "markdown-renderer",
+ "markdown-trap-contracts",
+]
+
+[[package]]
 name = "markdown-traq"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=e687f0e7e249b4f428e94a2bcd478abcf8de55d6#e687f0e7e249b4f428e94a2bcd478abcf8de55d6"
+source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
 dependencies = [
  "markdown-commonmark",
  "markdown-generic-syntax",
  "markdown-parser",
  "markdown-trap-syntax",
  "serde_json",
+]
+
+[[package]]
+name = "markdown-traq-processing"
+version = "0.1.0"
+source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
+dependencies = [
+ "markdown-commonmark-contracts",
+ "markdown-commonmark-text",
+ "markdown-extractor",
+ "markdown-generic-text",
+ "markdown-renderer",
+ "markdown-trap-extraction",
+ "markdown-trap-text",
 ]
 
 [[package]]
@@ -480,6 +553,21 @@ name = "traq-markdown-example"
 version = "0.1.0"
 dependencies = [
  "markdown-traq",
+ "traq-markdown-processor",
+]
+
+[[package]]
+name = "traq-markdown-processor"
+version = "0.1.0"
+dependencies = [
+ "markdown-extractor",
+ "markdown-renderer",
+ "markdown-traq",
+ "markdown-traq-processing",
+ "schemars",
+ "serde",
+ "serde_json",
+ "ts-rs",
 ]
 
 [[package]]
@@ -497,6 +585,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "traq-markdown-processor",
  "ts-rs",
 ]
 

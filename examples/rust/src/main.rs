@@ -11,5 +11,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let without_math = Parser::new(&grammar);
     drop(grammar);
     println!("{:#?}", without_math.parse_inline("$x$")?);
+    let processor = traq_markdown_processor::Processor::new(
+        traq_markdown_processor::ProcessorPreset::TraQV1,
+        traq_markdown_processor::ProcessorOptions {
+            origin: "https://q.example.test".into(),
+        },
+    )?;
+    println!("{:#?}", processor.process("**hello** !!secret!!")?);
     Ok(())
 }

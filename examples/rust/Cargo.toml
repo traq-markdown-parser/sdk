@@ -6,4 +6,5 @@ license.workspace = true
 publish = false
 
 [dependencies]
-markdown-traq = { git = "https://github.com/traq-markdown-parser/trap.git", rev = "e687f0e7e249b4f428e94a2bcd478abcf8de55d6", version = "0.1.0" }
+traq-markdown-processor = { path = "../../crates/processor" }
+markdown-traq = { git = "https://github.com/traq-markdown-parser/trap.git", rev = "bf220c640d23f39e33fa0a52147cdf3bd32998ff", version = "0.1.0" }
