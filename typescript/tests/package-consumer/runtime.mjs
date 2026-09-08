@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { createRuntime, presets, processors } from "@traq-markdown-parser/ts";
-import { names } from "@traq-markdown-parser/ts/trap/nodes";
+import { createRuntime, presets, processors } from "@traq-markdown-parser/traq";
+import { names } from "@traq-markdown-parser/traq/trap/nodes";
 const bytes = await readFile(
-  new URL(import.meta.resolve("@traq-markdown-parser/ts/parser.wasm")),
+  new URL(import.meta.resolve("@traq-markdown-parser/traq/parser.wasm")),
 );
 const runtime = await createRuntime(bytes);
 const parser = runtime.createParser(presets.traq.v1);

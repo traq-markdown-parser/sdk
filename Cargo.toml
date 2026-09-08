@@ -1,5 +1,7 @@
 [workspace]
 members = [
+    "crates/traq",
+    "crates/traq-processing",
     "crates/processor",
     "crates/wasm",
     "examples/rust",

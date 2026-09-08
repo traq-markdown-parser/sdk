@@ -1,0 +1,23 @@
+[package]
+name = "markdown-traq-processing"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+contracts = ["markdown-trap-extraction/contracts"]
+
+[dependencies]
+markdown-commonmark-text = { git = "https://github.com/traq-markdown-parser/commonmark.git", rev = "00fdb814d980ee4e326eb6a05d8ff4bba289d291", version = "0.1.0" }
+markdown-commonmark-contracts = { git = "https://github.com/traq-markdown-parser/commonmark.git", rev = "00fdb814d980ee4e326eb6a05d8ff4bba289d291", version = "0.1.0" }
+markdown-generic-text = { git = "https://github.com/traq-markdown-parser/commonmark.git", rev = "00fdb814d980ee4e326eb6a05d8ff4bba289d291", version = "0.1.0" }
+markdown-trap-text = { git = "https://github.com/traq-markdown-parser/trap-extension.git", rev = "a1040351d6ac05c273bca05da7539b161591de49", version = "0.1.0" }
+markdown-trap-extraction = { git = "https://github.com/traq-markdown-parser/trap-extension.git", rev = "a1040351d6ac05c273bca05da7539b161591de49", version = "0.1.0" }
+markdown-renderer = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+markdown-extractor = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+
+[dev-dependencies]
+markdown-trap-contracts = { git = "https://github.com/traq-markdown-parser/trap-extension.git", rev = "a1040351d6ac05c273bca05da7539b161591de49", version = "0.1.0" }
+markdown-traq = { path = "../traq" }
+serde_json = "1"

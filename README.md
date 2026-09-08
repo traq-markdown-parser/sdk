@@ -1,12 +1,28 @@
-# traQ Markdown SDK
+# traQ Markdown
 
-Rust の Markdown パーサーを、一つの WebAssembly バイナリとして TypeScript と Go から呼び出す SDK です。文法・AST の契約・検証は Rust が所有します。
+traQ 向けの Markdown 文法・通知処理の構成と、Rust・WebAssembly・Go・TypeScript 向けの配布を所有します。文法・AST の契約・検証は Rust が所有します。
 
-- npm: **`@traq-markdown-parser/ts`**
-- Go module: **`github.com/traq-markdown-parser/sdk/go`**
+- npm: **`@traq-markdown-parser/traq`**
+- Go module: **`github.com/traq-markdown-parser/traq/go`**
 - Wasm: ABI **3** / AST **4**
 
-文法の実装は [core](https://github.com/traq-markdown-parser/core)、[commonmark](https://github.com/traq-markdown-parser/commonmark)、[trap](https://github.com/traq-markdown-parser/trap) にあります。このリポジトリで配布するプリセットを選び、Wasm と対応する型を生成します。
+文法の実装は [core](https://github.com/traq-markdown-parser/core)、[commonmark](https://github.com/traq-markdown-parser/commonmark)、[trap-extension](https://github.com/traq-markdown-parser/trap-extension) にあります。このリポジトリで配布するプリセットを選び、Wasm と対応する型を生成します。
+
+## 構成と責任
+
+| 場所 | 責任 |
+| --- | --- |
+| `crates/traq` | CommonMark・汎用拡張・traP 拡張を選択し、文法プリセットを構成 |
+| `crates/traq-processing` | 通知の表示方針と参照抽出のプリセットを構成 |
+| `crates/processor` | 一度の解析から通知テキストと参照一覧を生成 |
+| `crates/wasm` | 配布する文法・ノード型・処理 API を Wasm として公開 |
+| `go`・`typescript`・`scripts/contracts` | この配布物に対応する bindings と型生成 |
+
+共通機構は core、CommonMark と汎用拡張は commonmark、traP 固有の拡張部品は
+trap-extension にあります。このリポジトリがそれらに依存し、traQ 向けに組み合わせます。
+下位の部品はこの配布物に依存しません。bindings はここで選んだ型とプリセットに対応します。
+
+旧リポジトリ名 `sdk` とパッケージ名からの変更は [MIGRATION.md](MIGRATION.md) を参照してください。
 
 ## ビルド
 
@@ -25,7 +41,7 @@ npm run examples
 ## TypeScript
 
 ```ts
-import { createRuntime, presets } from '@traq-markdown-parser/ts'
+import { createRuntime, presets } from '@traq-markdown-parser/traq'
 
 const runtime = await createRuntime(wasmBytes)
 try {
@@ -37,14 +53,14 @@ try {
 }
 ```
 
-`wasmBytes` は `Uint8Array` です。Node.js は `@traq-markdown-parser/ts/parser.wasm` を `readFile` で読み、ブラウザーは `new Uint8Array(await response.arrayBuffer())` を渡します。Runtime と Parser は再利用できます。同じ Runtime から異なるプリセットの Parser も作成できます。
+`wasmBytes` は `Uint8Array` です。Node.js は `@traq-markdown-parser/traq/parser.wasm` を `readFile` で読み、ブラウザーは `new Uint8Array(await response.arrayBuffer())` を渡します。Runtime と Parser は再利用できます。同じ Runtime から異なるプリセットの Parser も作成できます。
 
 ノード型は判別可能な union です。文法別の payload 型と任意利用の guard は `/commonmark/nodes`・`/generic/nodes`・`/trap/nodes`、全体の一覧は `/nodes` から利用できます。
 
 ## Go
 
 ```go
-import markdown "github.com/traq-markdown-parser/sdk/go"
+import markdown "github.com/traq-markdown-parser/traq/go"
 
 runtime, err := markdown.NewRuntime(ctx, wasmBytes)
 if err != nil { return err }
@@ -73,7 +89,7 @@ HTML / CSS は [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it
 `Processor` は原文を一度だけ Rust AST に解析し、その AST を通知用レンダラーと参照抽出器が借用します。ホストとの間では最終結果だけを渡します。
 
 ```ts
-import { createRuntime, processors } from '@traq-markdown-parser/ts'
+import { createRuntime, processors } from '@traq-markdown-parser/traq'
 
 const runtime = await createRuntime(wasmBytes)
 try {

@@ -1,8 +1,8 @@
 {
-  "name": "@traq-markdown-parser/ts",
+  "name": "@traq-markdown-parser/traq",
   "version": "0.1.0",
   "private": true,
-  "description": "Composable Rust Markdown parser with Go and TypeScript bindings.",
+  "description": "traQ Markdown presets and processing, distributed as Rust, Wasm, Go and TypeScript.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -46,7 +46,7 @@
     "typecheck": "tsc -p typescript/tsconfig.json --noEmit && tsc -p examples/typescript/tsconfig.json",
     "test:rust": "cargo test --workspace --all-features",
     "test:go": "go -C go test -count=1 ./...",
-    "example:rust": "cargo run -p traq-markdown-example",
+    "example:rust": "cargo run -p traq-markdown-example && cargo run -p markdown-traq --example parse && cargo run -p markdown-traq-processing --example notification && cargo run -p markdown-traq-processing --example compose-text",
     "example:go": "go -C examples/go run .",
     "example:ts": "node examples/typescript/main.mts",
     "examples": "npm run example:rust && npm run example:go && npm run example:ts",
@@ -56,14 +56,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/traq-markdown-parser/sdk.git"
+    "url": "git+https://github.com/traq-markdown-parser/traq.git"
   },
   "author": "traP (https://github.com/traPtitech)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/traq-markdown-parser/sdk/issues"
+    "url": "https://github.com/traq-markdown-parser/traq/issues"
   },
-  "homepage": "https://github.com/traq-markdown-parser/sdk#readme",
+  "homepage": "https://github.com/traq-markdown-parser/traq#readme",
   "sideEffects": false,
   "dependencies": {},
   "devDependencies": {

@@ -205,7 +205,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-contracts"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
 dependencies = [
  "markdown-ast",
  "markdown-definitions",
@@ -217,7 +217,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-extraction"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
 dependencies = [
  "markdown-extractor",
  "markdown-trap-contracts",
@@ -229,7 +229,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-syntax"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
 dependencies = [
  "markdown-commonmark",
  "markdown-definitions",
@@ -242,7 +242,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-text"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
 dependencies = [
  "markdown-renderer",
  "markdown-trap-contracts",
@@ -251,9 +251,10 @@ dependencies = [
 [[package]]
 name = "markdown-traq"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
 dependencies = [
  "markdown-commonmark",
+ "markdown-commonmark-contracts",
+ "markdown-definitions",
  "markdown-generic-syntax",
  "markdown-parser",
  "markdown-trap-syntax",
@@ -263,15 +264,17 @@ dependencies = [
 [[package]]
 name = "markdown-traq-processing"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap.git?rev=bf220c640d23f39e33fa0a52147cdf3bd32998ff#bf220c640d23f39e33fa0a52147cdf3bd32998ff"
 dependencies = [
  "markdown-commonmark-contracts",
  "markdown-commonmark-text",
  "markdown-extractor",
  "markdown-generic-text",
  "markdown-renderer",
+ "markdown-trap-contracts",
  "markdown-trap-extraction",
  "markdown-trap-text",
+ "markdown-traq",
+ "serde_json",
 ]
 
 [[package]]

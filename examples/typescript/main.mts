@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { createRuntime, presets, processors } from "@traq-markdown-parser/ts";
+import { createRuntime, presets, processors } from "@traq-markdown-parser/traq";
 const wasm = await readFile(
-  new URL(import.meta.resolve("@traq-markdown-parser/ts/parser.wasm")),
+  new URL(import.meta.resolve("@traq-markdown-parser/traq/parser.wasm")),
 );
 const runtime = await createRuntime(wasm);
 try {

@@ -7,4 +7,4 @@ publish = false
 
 [dependencies]
 traq-markdown-processor = { path = "../../crates/processor" }
-markdown-traq = { git = "https://github.com/traq-markdown-parser/trap.git", rev = "bf220c640d23f39e33fa0a52147cdf3bd32998ff", version = "0.1.0" }
+markdown-traq = { path = "../../crates/traq" }

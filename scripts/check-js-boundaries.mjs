@@ -28,3 +28,11 @@ const { execFileSync } = await import("node:child_process");
 const dependencies = execFileSync("cargo", ["tree", "--locked", "-p", "traq-markdown-processor", "--edges", "normal"], { cwd: root, encoding: "utf8" });
 assert(!dependencies.includes("markdown-codec"), "Native processing must borrow the AST without a codec dependency");
 console.log("Native processing: no AST codec dependency");
+
+for (const name of ["markdown-traq-processing", "markdown-trap-text", "markdown-trap-extraction", "markdown-trap-contracts"]) {
+  const tree = execFileSync("cargo", ["tree", "--locked", "-p", name, "--edges", "normal"], { cwd: root, encoding: "utf8" });
+  assert(!/markdown-parser v|markdown-codec v|markdown-traq v|traq-markdown-processor v|traq-markdown-wasm v/.test(tree), name + ": lower-level processing must not depend on parsing or distribution");
+}
+const syntax = execFileSync("cargo", ["tree", "--locked", "-p", "markdown-trap-syntax", "--edges", "normal"], { cwd: root, encoding: "utf8" });
+assert(!/markdown-traq v|traq-markdown-processor v|traq-markdown-wasm v/.test(syntax), "Extension syntax must not depend on the traQ distribution");
+console.log("Dependency direction: extension components and processing presets do not depend on the distribution");

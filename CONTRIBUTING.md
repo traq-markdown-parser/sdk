@@ -28,7 +28,10 @@ Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache res
 
 | Location | Responsibility |
 | --- | --- |
-| `crates/wasm` | Wasm ABI, distribution catalog, registered node contract list |
+| crates/traq | traQ grammar presets and the distribution catalog |
+| crates/traq-processing | traQ notification and extraction presets |
+| crates/processor | Parse-once composition returning notification and references |
+| crates/wasm | Wasm ABI, distribution catalog, registered node contract list |
 | `typescript/index.ts`, `go/parser.go` | Thin Wasm transport and lifecycle |
 | `typescript/validation.ts` | Generic helpers for optional generated payload guards |
 | `typescript/generated`, `go/*_generated.go` | Rust-derived payloads, presets and artifact metadata |
@@ -42,7 +45,7 @@ Bindings are authored in `.ts`; `.js` and `.d.ts` are build outputs. Rust is the
 
 The unpublished Rust crates use Git dependencies with a fixed revision and a package version. `Cargo.lock` is committed. Update all dependencies from one repository to the same revision, then rebuild and inspect the generated contract diff. Parser initialization rejects a Rust build ID that does not match its generated SDK.
 
-For simultaneous local development, keep `core`, `commonmark`, `trap`, and `sdk` beside one another. Use a machine-local Cargo patch configuration. Override the entire edited repository so its shared AST and declaration types have one Cargo package identity. For example:
+For simultaneous local development, keep `core`, `commonmark`, `trap-extension`, and `traq` beside one another. Use a machine-local Cargo patch configuration. Override the entire edited repository so its shared AST and declaration types have one Cargo package identity. For example:
 
 ```toml
 [patch."https://github.com/traq-markdown-parser/core.git"]

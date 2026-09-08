@@ -2,15 +2,15 @@
 
 ## Rust が所有するもの
 
-文法の構成、解析、ノードの型と意味検証は Rust にあります。文法は trap リポジトリの `crates/traq/src/bindings/mod.rs`、ノード契約は SDK の `crates/wasm/src/node_types.rs` に登録します。Rust の文法ビルダーで独自構成を作り、catalog の preset として公開すると、その名前を TypeScript / Go に生成します。
+文法の構成、解析、ノードの型と意味検証は Rust にあります。このリポジトリ内の `crates/traq/src/bindings/mod.rs` で配布する文法を選び、`crates/wasm/src/node_types.rs` に配布するノード契約を登録します。Rust の文法ビルダーで独自構成を作り、catalog の preset として公開すると、その名前を TypeScript / Go に生成します。
 
-Rust API は [parser core](https://github.com/traq-markdown-parser/core/blob/main/crates/parser/README.md) と [traQ presets](https://github.com/traq-markdown-parser/trap/blob/main/crates/traq/README.md) を参照してください。ネイティブ Rust では引き続き Plugin / Rule の追加・削除・並べ替えを利用できます。
+Rust API は [parser core](https://github.com/traq-markdown-parser/core/blob/main/crates/parser/README.md) と [traQ presets](https://github.com/traq-markdown-parser/traq/blob/main/crates/traq/README.md) を参照してください。ネイティブ Rust では引き続き Plugin / Rule の追加・削除・並べ替えを利用できます。
 
 ## TypeScript
 
 ```ts
-import { createRuntime, presets } from '@traq-markdown-parser/ts'
-import { names } from '@traq-markdown-parser/ts/nodes'
+import { createRuntime, presets } from '@traq-markdown-parser/traq'
+import { names } from '@traq-markdown-parser/traq/nodes'
 
 const runtime = await createRuntime(wasmBytes)
 try {
@@ -32,7 +32,7 @@ try {
 ## Go
 
 ```go
-import markdown "github.com/traq-markdown-parser/sdk/go"
+import markdown "github.com/traq-markdown-parser/traq/go"
 
 runtime, err := markdown.NewRuntime(ctx, wasmBytes)
 if err != nil { return err }
@@ -70,11 +70,11 @@ Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小
 
 [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it) は受け取った Document から HTML を作ります。レンダラーの Plugin 宣言はそのパッケージが所有します。文法を構成する Rust の Plugin とは別の API です。
 
-通知・参照抽出のネイティブ Rust API は [traq-processing](https://github.com/traq-markdown-parser/trap/tree/main/crates/traq-processing) にあります。保存済みメッセージの文法版は利用側で管理し、原文を対応するプリセットで再解析します。永続 AST の互換層は設けません。
+通知・参照抽出のネイティブ Rust API は [traq-processing](https://github.com/traq-markdown-parser/traq/tree/main/crates/traq-processing) にあります。保存済みメッセージの文法版は利用側で管理し、原文を対応するプリセットで再解析します。永続 AST の互換層は設けません。
 
 ## Processing pipeline
 
-`crates/processor` composes the Rust parser, notification renderer and reference extractor. `Processor::process` parses once and lends the same native Document to both consumers; it does not depend on the AST codec. The reusable renderer and extractor implementations remain in core/commonmark/trap, independent of the SDK transport.
+`crates/processor` composes the Rust parser, notification renderer and reference extractor. `Processor::process` parses once and lends the same native Document to both consumers; it does not depend on the AST codec. The reusable renderer and extractor implementations remain in core/commonmark/trap-extension, independent of this distribution and its transport.
 
 Wasm additionally exports `configure_processor` and `process`. Configuration selects a Rust `ProcessorPreset` and `ProcessorOptions`; processing accepts the original UTF-8 source and returns `{result: ProcessOutput}` or `{error: string}`. No AST is serialized in this path. Processing errors currently carry a message, without a stable machine-readable classification. Applications must not classify those errors by matching their text.
 

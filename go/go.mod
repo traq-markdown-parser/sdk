@@ -1,4 +1,4 @@
-module github.com/traq-markdown-parser/sdk/go
+module github.com/traq-markdown-parser/traq/go
 
 go 1.25.0
 

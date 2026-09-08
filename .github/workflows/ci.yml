@@ -1,4 +1,4 @@
-name: SDK CI
+name: traQ Markdown CI
 on: [push, pull_request]
 permissions:
   contents: read

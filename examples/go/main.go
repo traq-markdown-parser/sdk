@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	markdown "github.com/traq-markdown-parser/sdk/go"
+	markdown "github.com/traq-markdown-parser/traq/go"
 	"os"
 )
 

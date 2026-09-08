@@ -1,12 +1,12 @@
-import {processors, type ProcessOutput} from "@traq-markdown-parser/ts";
+import {processors, type ProcessOutput} from "@traq-markdown-parser/traq";
 import {
   createRuntime,
   presets,
   isKnownNode,
   type Node,
   type Document,
-} from "@traq-markdown-parser/ts";
-import { names, type ReferenceData } from "@traq-markdown-parser/ts/trap/nodes";
+} from "@traq-markdown-parser/traq";
+import { names, type ReferenceData } from "@traq-markdown-parser/traq/trap/nodes";
 const runtime = await createRuntime(new Uint8Array());
 const parser = runtime.createParser(presets.traq.v1);
 const document: Document = parser.parse("text");
