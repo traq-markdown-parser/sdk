@@ -23,7 +23,12 @@ func run(path string) error {
 	if err != nil {
 		return err
 	}
-	parser, err := markdown.New(ctx, wasm, markdown.PresetTraQV1)
+	runtime, err := markdown.NewRuntime(ctx, wasm)
+	if err != nil {
+		return err
+	}
+	defer runtime.Close(ctx)
+	parser, err := runtime.NewParser(ctx, markdown.PresetTraQV1)
 	if err != nil {
 		return err
 	}

@@ -18,7 +18,12 @@ func parserFor(t *testing.T, preset Preset) *Parser {
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, err := New(context.Background(), bytes, preset)
+	r, err := NewRuntime(context.Background(), bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { r.Close(context.Background()) })
+	p, err := r.NewParser(context.Background(), preset)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,14 +177,19 @@ func TestConcurrentCalls(t *testing.T) {
 	wg.Wait()
 }
 func TestInitialization(t *testing.T) {
-	if _, err := New(context.Background(), []byte{0}, PresetTraQV1); err == nil {
+	if _, err := NewRuntime(context.Background(), []byte{0}); err == nil {
 		t.Fatal("accepted mismatched artifact")
 	}
 	bytes, err := os.ReadFile("../dist/parser.wasm")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := New(context.Background(), bytes, Preset("invalid")); err == nil {
+	r, err := NewRuntime(context.Background(), bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close(context.Background())
+	if _, err := r.NewParser(context.Background(), Preset("invalid")); err == nil {
 		t.Fatal("accepted invalid preset")
 	}
 }
@@ -193,10 +203,15 @@ func TestBuildMismatch(t *testing.T) {
 		t.Fatal("missing build ID")
 	}
 	other := bytes.ReplaceAll(wasm, []byte(buildID), []byte(strings.Repeat("0", len(buildID))))
-	if _, err := New(context.Background(), other, PresetTraQV1); err == nil || !strings.Contains(err.Error(), "does not match") {
+	r, err := NewRuntime(context.Background(), other)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := New(context.Background(), []byte{0, 97, 115, 109, 1, 0, 0, 0}, PresetTraQV1); err == nil {
+	defer r.Close(context.Background())
+	if _, err := r.NewParser(context.Background(), PresetTraQV1); err == nil || !strings.Contains(err.Error(), "does not match") {
+		t.Fatal(err)
+	}
+	if _, err := NewRuntime(context.Background(), []byte{0, 97, 115, 109, 1, 0, 0, 0}); err == nil {
 		t.Fatal("accepted empty Wasm")
 	}
 }

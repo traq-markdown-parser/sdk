@@ -10,28 +10,45 @@ import (
 	"github.com/tetratelabs/wazero/api"
 )
 
+// Runtime compiles Wasm once and owns the parsers instantiated from it.
+type Runtime struct {
+	runtime  wazero.Runtime
+	compiled wazero.CompiledModule
+}
+
 // Parser owns one Wasm instance. Calls are serialized; use separate parsers for parallel execution.
 // A context canceled during a Wasm call closes the instance; create a new Parser to resume.
 type Parser struct {
-	runtime wazero.Runtime
-	module  api.Module
-	gate    chan struct{}
+	module api.Module
+	gate   chan struct{}
 }
 
-func New(ctx context.Context, wasm []byte, preset Preset) (*Parser, error) {
+func NewRuntime(ctx context.Context, wasm []byte) (*Runtime, error) {
 	rt := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithMemoryLimitPages(memoryPages).WithCloseOnContextDone(true))
-	module, err := rt.Instantiate(ctx, wasm)
+	compiled, err := rt.CompileModule(ctx, wasm)
 	if err != nil {
 		rt.Close(context.Background())
 		return nil, err
 	}
-	p := &Parser{runtime: rt, module: module, gate: make(chan struct{}, 1)}
 	for _, name := range []string{"input_ptr", "output_ptr", "configure", "parse"} {
-		if module.Memory() == nil || module.ExportedFunction(name) == nil {
-			p.Close(context.Background())
+		if compiled.ExportedMemories()["memory"] == nil || compiled.ExportedFunctions()[name] == nil {
+			rt.Close(context.Background())
 			return nil, fmt.Errorf("invalid parser Wasm exports")
 		}
 	}
+	return &Runtime{runtime: rt, compiled: compiled}, nil
+}
+
+// Close releases the compiled module and all parsers created by this Runtime.
+func (r *Runtime) Close(ctx context.Context) error { return r.runtime.Close(ctx) }
+
+// NewParser creates an independent instance using the shared compiled module.
+func (r *Runtime) NewParser(ctx context.Context, preset Preset) (*Parser, error) {
+	module, err := r.runtime.InstantiateModule(ctx, r.compiled, wazero.NewModuleConfig().WithName(""))
+	if err != nil {
+		return nil, err
+	}
+	p := &Parser{module: module, gate: make(chan struct{}, 1)}
 	if _, err := p.call(ctx, "configure", string(preset)); err != nil {
 		p.Close(context.Background())
 		return nil, err
@@ -39,7 +56,8 @@ func New(ctx context.Context, wasm []byte, preset Preset) (*Parser, error) {
 	return p, nil
 }
 
-func (p *Parser) Close(ctx context.Context) error { return p.runtime.Close(ctx) }
+// Close releases only this parser's instance, leaving its Runtime usable.
+func (p *Parser) Close(ctx context.Context) error { return p.module.Close(ctx) }
 func (p *Parser) Parse(ctx context.Context, source string) (*Document, error) {
 	return p.parse(ctx, source, 0)
 }

@@ -33,7 +33,11 @@ try {
 ```go
 import markdown "github.com/traq-markdown-parser/sdk/go"
 
-parser, err := markdown.New(ctx, wasmBytes, markdown.PresetTraQV1)
+runtime, err := markdown.NewRuntime(ctx, wasmBytes)
+if err != nil { return err }
+defer runtime.Close(ctx)
+
+parser, err := runtime.NewParser(ctx, markdown.PresetTraQV1)
 if err != nil { return err }
 defer parser.Close(ctx)
 document, err := parser.ParseInline(ctx, "[資料](https://example.com)")
@@ -47,7 +51,7 @@ for _, node := range document.Children {
 
 `Document` と全 payload は生成した型です。JSON が必要なら `json.Marshal(document)` を使います。結果は Wasm memory を参照しないため、次の解析や解放後も保持できます。
 
-Parser は一つの wazero runtime / instance を所有し、解析呼び出しを直列化します。並列に解析する用途では Parser を複数作ります。待機中または呼び出し前の context キャンセルは instance を閉じません。実行中の Wasm を中断した場合は wazero が instance を閉じるため、新しい Parser を作成してください。自動的な再生成や pool はありません。`Close(ctx)` は runtime を解放し、処理中の呼び出しも中断できます。
+Runtime は wazero の実行環境と一度だけコンパイルした Wasm module を所有します。`runtime.NewParser(ctx, preset)` は独立した instance を作成します。Parser 内の解析呼び出しは直列化します。並列に解析する用途では Parser を複数作ります。待機中または呼び出し前の context キャンセルは instance を閉じません。実行中の Wasm を中断した場合は wazero が instance を閉じるため、同じ Runtime から新しい Parser を作成してください。自動的な再生成や pool はありません。`Parser.Close(ctx)` はその instance だけを解放します。`Runtime.Close(ctx)` は全 Parser とコンパイル済み module を解放し、以降の Parser 作成も拒否します。どちらも処理中の呼び出しを中断できます。
 
 ## 契約と生成
 

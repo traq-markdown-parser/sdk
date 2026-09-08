@@ -45,13 +45,17 @@ try {
 ```go
 import markdown "github.com/traq-markdown-parser/sdk/go"
 
-parser, err := markdown.New(ctx, wasmBytes, markdown.PresetTraQV1)
+runtime, err := markdown.NewRuntime(ctx, wasmBytes)
+if err != nil { return err }
+defer runtime.Close(ctx)
+
+parser, err := runtime.NewParser(ctx, markdown.PresetTraQV1)
 if err != nil { return err }
 defer parser.Close(ctx)
 document, err := parser.Parse(ctx, "**hello** :stamp:")
 ```
 
-`Parse` / `ParseInline` は `*markdown.Document` を返します。`Node.Data` の具体的な型も Rust から生成します。一つの Parser の呼び出しは直列化します。並列実行には Parser を複数作ります。
+`Parse` / `ParseInline` は `*markdown.Document` を返します。`Node.Data` の具体的な型も Rust から生成します。Runtime は Wasm のコンパイル結果を共有します。一つの Parser の呼び出しは直列化し、並列実行には同じ Runtime から Parser を複数作ります。`Parser.Close` はその Parser だけ、`Runtime.Close` は配下の全 Parser を解放します。
 
 ## 文法の変更
 
