@@ -30,6 +30,7 @@ func parserFor(t *testing.T, preset Preset) *Parser {
 	t.Cleanup(func() { p.Close(context.Background()) })
 	return p
 }
+
 func TestFixtureAST(t *testing.T) {
 	p := parserFor(t, PresetTraQV1)
 	raw, err := os.ReadFile("../tests/fixtures/commonmark-0.31.2.json")
@@ -47,6 +48,7 @@ func TestFixtureAST(t *testing.T) {
 	for _, c := range common {
 		sources[c.Example] = c.Markdown
 	}
+
 	for _, file := range []string{"traq-v1-commonmark", "traq-v1-extensions"} {
 		raw, err := os.ReadFile("../tests/fixtures/" + file + ".json")
 		if err != nil {
@@ -95,6 +97,7 @@ func TestFixtureAST(t *testing.T) {
 		}
 	}
 }
+
 func TestLifecycleAndBounds(t *testing.T) {
 	ctx := context.Background()
 	p := parserFor(t, PresetTraQV1)
@@ -155,6 +158,7 @@ func TestLifecycleAndBounds(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
 func TestConcurrentCalls(t *testing.T) {
 	p := parserFor(t, PresetTraQV1)
 	var wg sync.WaitGroup
@@ -176,6 +180,7 @@ func TestConcurrentCalls(t *testing.T) {
 	}
 	wg.Wait()
 }
+
 func TestInitialization(t *testing.T) {
 	if _, err := NewRuntime(context.Background(), []byte{0}); err == nil {
 		t.Fatal("accepted mismatched artifact")

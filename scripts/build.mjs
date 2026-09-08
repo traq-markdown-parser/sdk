@@ -18,10 +18,12 @@ run("cargo", [
   "build", "--locked", "--release", "--target", "wasm32-unknown-unknown",
   "-p", "traq-markdown-wasm",
 ]);
+
 run("cargo", [
   "run", "--locked", "--release", "-p", "traq-markdown-wasm", "--features", "contracts",
   "--bin", "export-node-contracts", "--", contracts,
 ]);
+
 await rm(path.join(root, "dist"), { recursive: true, force: true });
 await mkdir(path.join(root, "dist"), { recursive: true });
 await copyFile(
@@ -29,5 +31,6 @@ await copyFile(
   path.join(root, "dist/parser.wasm"),
 );
 run(process.execPath, ["scripts/generate-bindings.mjs", contracts]);
+
 run(process.execPath, ["node_modules/typescript/bin/tsc", "-p", "typescript/tsconfig.build.json"]);
 run(process.execPath, ["scripts/contract.mjs"]);

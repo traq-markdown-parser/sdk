@@ -8,6 +8,7 @@ pub fn builder(origin: &str) -> Result<PresetBuilder> {
     if origin.len() > 2048 {
         return Err("origin_limit");
     }
+
     let mut commonmark = markdown_commonmark_text::plugin();
     let links = Links::new(origin);
     commonmark.replace::<Link>(move |link, nodes, ctx| {
@@ -21,6 +22,7 @@ pub fn builder(origin: &str) -> Result<PresetBuilder> {
         }
         ctx.children(nodes)
     })?;
+
     let mut builder = PresetBuilder::new();
     builder.add(&commonmark)?;
     builder.add(&markdown_commonmark_text::html::plugin())?;

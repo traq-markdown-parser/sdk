@@ -10,10 +10,12 @@ fn exported_types_cover_public_fixtures_and_roundtrip_the_native_tree() {
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/node-contract-tests");
     let metadata =
         crate::node_metadata::export(&ts_rs::Config::default().with_out_dir(output)).unwrap();
+
     assert_eq!(metadata.as_object().unwrap().len(), 28);
     let commonmark = traq_markdown_grammar::presets::commonmark::parser();
     let traq = traq_markdown_grammar::presets::traq::v1::parser();
     let mut count = 0;
+
     for (file, parser) in [
         ("commonmark-0.31.2.json", &commonmark),
         ("traq-v1-extensions.json", &traq),
@@ -46,6 +48,7 @@ fn exported_types_cover_public_fixtures_and_roundtrip_the_native_tree() {
             count += 1;
         }
     }
+
     assert_eq!(count, 673);
 }
 
@@ -55,6 +58,7 @@ fn native_semantic_validation_is_applied_at_both_codec_boundaries() {
         source: "x".into(),
         children: vec![Node::leaf(Span { start: 0, end: 1 }, Heading { level: 7 })],
     };
+
     assert!(nodes::codec().encode(&document).is_err());
     let json = serde_json::json!({"source":"x", "children":[{
         "kind":Heading::type_key(),"span":{"start":0,"end":1},"data":{"level":7}
@@ -64,6 +68,7 @@ fn native_semantic_validation_is_applied_at_both_codec_boundaries() {
             .decode(&serde_json::to_vec(&json).unwrap())
             .is_err()
     );
+
     let child = Node::leaf(Span { start: 0, end: 1 }, Text { value: "x".into() });
     let document = Document {
         source: "x".into(),

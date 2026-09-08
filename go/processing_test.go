@@ -93,6 +93,7 @@ func TestProcessing(t *testing.T) {
 		t.Fatal(err)
 	}
 	<-processor.gate
+
 	var wg sync.WaitGroup
 	for i := 0; i < 8; i++ {
 		wg.Add(1)
@@ -111,6 +112,7 @@ func TestProcessing(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+
 	if err := processor.Close(ctx); err != nil {
 		t.Fatal(err)
 	}

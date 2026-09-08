@@ -54,12 +54,14 @@ impl Processor {
             .parser
             .parse(source)
             .map_err(|error| error.to_string())?;
+
         let notification_text = self
             .renderer
             .render(&document)?
             .split_whitespace()
             .collect::<Vec<_>>()
             .join(" ");
+
         let references = self.extractor.extract(&document)?;
         Ok(ProcessOutput {
             notification_text,

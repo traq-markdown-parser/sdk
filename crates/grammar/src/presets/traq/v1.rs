@@ -9,6 +9,7 @@ pub fn syntax() -> &'static commonmark::Syntax {
         LazyLock::new(|| commonmark::Syntax::new(trap::compat::links()));
     &SYNTAX
 }
+
 pub fn builder() -> GrammarBuilder {
     let base = syntax();
     let mut builder = GrammarBuilder::new();
@@ -55,6 +56,7 @@ pub fn builder() -> GrammarBuilder {
     }
     builder
 }
+
 pub fn grammar() -> &'static Grammar {
     static GRAMMAR: LazyLock<Grammar> = LazyLock::new(|| {
         let grammar = builder().build().expect("valid V1 profile");
@@ -66,6 +68,7 @@ pub fn grammar() -> &'static Grammar {
     });
     &GRAMMAR
 }
+
 pub fn parser() -> Parser {
     Parser::new(grammar())
 }

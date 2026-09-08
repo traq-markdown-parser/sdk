@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	markdown "github.com/traq-markdown-parser/traq/go"
 	"os"
+
+	markdown "github.com/traq-markdown-parser/traq/go"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 		os.Exit(1)
 	}
 }
+
 func run(path string) error {
 	ctx := context.Background()
 	wasm, err := os.ReadFile(path)
@@ -42,6 +44,7 @@ func run(path string) error {
 		return err
 	}
 	fmt.Println(string(raw))
+
 	processor, err := runtime.NewProcessor(ctx, markdown.ProcessorPresetTraQV1, markdown.ProcessorOptions{Origin: "https://q.example.test"})
 	if err != nil {
 		return err

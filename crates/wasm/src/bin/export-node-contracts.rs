@@ -22,6 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_out_dir(&directory)
         .with_import_extension(Some("js"));
     <traq_markdown_grammar::ParseError as ts_rs::TS>::export_all(&config)?;
+
     let mut processing = serde_json::Map::new();
     macro_rules! processing_type {
         ($($ty:ident),*) => {$(
@@ -33,6 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )*};
     }
     processing_type!(ProcessorPreset, ProcessorOptions, ProcessOutput);
+
     // Check that metadata and codec registrations agree before writing bindings.
     let _ = nodes::codec();
     let manifest = serde_json::json!({
@@ -42,6 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "limits": {"inputBytes": limits::MAX_INPUT, "outputBytes": limits::MAX_OUTPUT, "memoryBytes": limits::MEMORY_BYTES},
         "nodes": node_metadata::export(&config)?,
     });
+
     std::fs::create_dir_all(&directory)?;
     std::fs::write(
         std::path::Path::new(&directory).join("contracts.json"),

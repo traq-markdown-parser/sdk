@@ -7,6 +7,7 @@ fn has_link(nodes: &[Node]) -> bool {
         .iter()
         .any(|node| node.get::<Link>().is_some() || has_link(&node.children))
 }
+
 #[test]
 fn parser_and_dispatch_can_be_shared_without_leaking_references() {
     let parser = presets::traq::v1::parser();
@@ -23,6 +24,7 @@ fn parser_and_dispatch_can_be_shared_without_leaking_references() {
         }
     });
 }
+
 #[test]
 fn limits_cover_multibyte_input_and_nested_results() {
     for (source, limits, resource) in [
@@ -57,6 +59,7 @@ fn limits_cover_multibyte_input_and_nested_results() {
         );
     }
 }
+
 #[test]
 fn syntax_and_rendering_policy_are_separate() {
     let source = "[x](javascript:alert) <file:///a>";

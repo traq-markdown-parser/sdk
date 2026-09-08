@@ -16,6 +16,7 @@ test('new Rust-exported payloads and presets generate both host APIs', async () 
     const schema = {title:'BadgeData',type:'object',additionalProperties:false,
       properties:{label:{type:'string'},active:{type:'boolean'}},required:['label','active']};
     const key = 'custom::BadgeData';
+
     const generated = await typescriptFiles({nodes:{[key]:{schema,group:'custom'}}},directory);
     assert.match(generated.get('typescript/generated/custom.ts'), /kind: "custom::BadgeData"; data: BadgeData/);
     assert.match(generated.get('typescript/generated/nodes.ts'), /custom.NodeKind/);

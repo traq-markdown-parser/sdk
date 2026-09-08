@@ -87,12 +87,15 @@ func (r *Runtime) instantiate(ctx context.Context, operation, config string) (*i
 
 // Close releases only this instance, leaving its Runtime usable.
 func (p *instance) Close(ctx context.Context) error { return p.module.Close(ctx) }
+
 func (p *Parser) Parse(ctx context.Context, source string) (*Document, error) {
 	return p.parse(ctx, source, 0)
 }
+
 func (p *Parser) ParseInline(ctx context.Context, source string) (*Document, error) {
 	return p.parse(ctx, source, 1)
 }
+
 func (p *Parser) parse(ctx context.Context, source string, mode uint64) (*Document, error) {
 	raw, err := p.invoke(ctx, "parse", source, mode)
 	if err != nil {
@@ -134,6 +137,7 @@ func (p *instance) call(ctx context.Context, operation, input string, args ...ui
 	if p.module.IsClosed() {
 		return nil, fmt.Errorf("parser is closed")
 	}
+
 	if len(input) > inputBytes {
 		return nil, fmt.Errorf("Wasm input limit exceeded")
 	}
@@ -147,6 +151,7 @@ func (p *instance) call(ctx context.Context, operation, input string, args ...ui
 	if !p.module.Memory().Write(uint32(pointer[0]), []byte(input)) {
 		return nil, fmt.Errorf("invalid Wasm input range")
 	}
+
 	length, err := p.module.ExportedFunction(operation).Call(ctx, args...)
 	if err != nil {
 		if ctx.Err() != nil {
@@ -162,6 +167,7 @@ func (p *instance) call(ctx context.Context, operation, input string, args ...ui
 	if !ok {
 		return nil, fmt.Errorf("invalid Wasm output range")
 	}
+
 	var reply struct {
 		Document   json.RawMessage `json:"document"`
 		Result     json.RawMessage `json:"result"`
@@ -171,12 +177,14 @@ func (p *instance) call(ctx context.Context, operation, input string, args ...ui
 	if err := json.Unmarshal(output, &reply); err != nil {
 		return nil, err
 	}
+
 	if reply.Error != nil {
 		return nil, fmt.Errorf("markdown: %s", reply.Error)
 	}
 	if (operation == "configure" || operation == "configure_processor") && reply.Configured != buildID {
 		return nil, fmt.Errorf("Wasm does not match this SDK build")
 	}
+
 	if reply.Document != nil {
 		return reply.Document, nil
 	}

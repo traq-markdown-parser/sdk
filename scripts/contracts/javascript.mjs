@@ -1,4 +1,5 @@
 import { shape, typeName, quoted as q } from "./schema.mjs";
+
 function validator(s) {
   if (s.kind === "string" || s.kind === "boolean") return s.kind;
   if (s.kind === "integer")
@@ -17,6 +18,7 @@ function validator(s) {
   }
   throw new Error("Unsupported validator");
 }
+
 export function javascript(entries, fieldsImport = "../fields.js") {
   const used = new Set();
   for (const [, schema] of entries) {
@@ -25,6 +27,7 @@ export function javascript(entries, fieldsImport = "../fields.js") {
       throw new Error("Duplicate generated payload type: " + name);
     used.add(name);
   }
+
   return (
     "// Generated from Rust node payload types. Do not edit.\n" +
     "import {fields,string,boolean,nullable,oneOf} from " + q(fieldsImport) + "\n" +

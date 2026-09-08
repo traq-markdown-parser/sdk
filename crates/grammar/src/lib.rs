@@ -9,6 +9,7 @@ pub mod syntax {
     pub use markdown_generic_syntax as extensions;
     pub use markdown_trap_syntax as trap;
 }
+
 pub use markdown_parser::{
     Document, Grammar, GrammarBuilder, Limits, Node, NodeKind, ParseError, Parser, Span, engine,
 };

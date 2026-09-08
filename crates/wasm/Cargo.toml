@@ -10,7 +10,15 @@ publish.workspace = true
 crate-type = ["cdylib"]
 
 [features]
-contracts = ["markdown-parser/contracts","dep:ts-rs", "dep:schemars", "markdown-commonmark-contracts/contracts", "markdown-generic-contracts/contracts", "markdown-trap-contracts/contracts", "traq-markdown-processor/contracts"]
+contracts = [
+    "markdown-parser/contracts",
+    "dep:ts-rs",
+    "dep:schemars",
+    "markdown-commonmark-contracts/contracts",
+    "markdown-generic-contracts/contracts",
+    "markdown-trap-contracts/contracts",
+    "traq-markdown-processor/contracts",
+]
 
 [[bin]]
 name = "export-node-contracts"

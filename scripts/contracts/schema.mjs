@@ -22,6 +22,7 @@ export function shape(schema, root = schema, references = new Set()) {
       name: schema.$ref.slice(8),
     };
   }
+
   if (schema.anyOf || Array.isArray(schema.type)) {
     keys(schema, schema.anyOf ? ["anyOf"] : ["type"]);
     const variants = schema.anyOf ?? schema.type.map((type) => ({ type }));
@@ -34,6 +35,7 @@ export function shape(schema, root = schema, references = new Set()) {
     );
     return { kind: "nullable", inner: shape(real[0], root, references) };
   }
+
   if (schema.enum) {
     keys(schema, ["type", "enum"]);
     if (
@@ -44,10 +46,12 @@ export function shape(schema, root = schema, references = new Set()) {
       throw new Error("Only nonempty string enums are supported");
     return { kind: "enum", values: schema.enum };
   }
+
   if (schema.type === "string" || schema.type === "boolean") {
     keys(schema, ["type"]);
     return { kind: schema.type };
   }
+
   if (schema.type === "integer") {
     keys(schema, ["type", "format", "minimum", "maximum"]);
     const ranges = { uint8: [0, 255], uint32: [0, 0xffffffff] };
@@ -65,10 +69,12 @@ export function shape(schema, root = schema, references = new Set()) {
       max: range[1],
     };
   }
+
   if (schema.type === "array") {
     keys(schema, ["type", "items"]);
     return { kind: "array", items: shape(schema.items, root, references) };
   }
+
   if (schema.type === "object") {
     keys(schema, ["type", "properties", "required", "additionalProperties"]);
     if (schema.additionalProperties !== false)
@@ -86,8 +92,10 @@ export function shape(schema, root = schema, references = new Set()) {
       })),
     };
   }
+
   throw new Error("Unsupported schema type: " + schema.type);
 }
+
 export function typeName(schema) {
   const name = schema.title?.replace(/Data$/, "");
   if (!name || !/^[A-Z][A-Za-z0-9_]*$/.test(name))

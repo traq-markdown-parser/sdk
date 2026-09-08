@@ -8,11 +8,13 @@ use markdown_parser::{
     },
 };
 use traq_markdown_grammar::presets;
+
 #[derive(Debug, Clone, PartialEq)]
 struct Note {
     title: String,
 }
 impl NodeData for Note {}
+
 fn has_link(nodes: &[markdown_parser::Node]) -> bool {
     nodes.iter().any(|node| {
         node.get::<Link>()
@@ -20,6 +22,7 @@ fn has_link(nodes: &[markdown_parser::Node]) -> bool {
             || has_link(&node.children)
     })
 }
+
 fn note() -> (Plugin, BlockRule) {
     let block = BlockRule::new(|input, budget| {
         let Some(title) = input.current().strip_prefix(":::note ") else {
@@ -75,6 +78,7 @@ fn note() -> (Plugin, BlockRule) {
     }));
     (plugin, block)
 }
+
 fn count(nodes: &[markdown_parser::Node]) -> usize {
     nodes
         .iter()
@@ -108,6 +112,7 @@ fn block_bodies_resolve_nested_and_later_references() {
         }
     }
 }
+
 #[test]
 fn removal_covers_every_phase_and_presets_do_not_leak() {
     let (plugin, block) = note();

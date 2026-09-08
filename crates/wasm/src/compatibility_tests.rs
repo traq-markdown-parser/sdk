@@ -9,6 +9,7 @@ fn result(value: Result<Document, ParseError>) -> Value {
         Err(error) => json!({"Err": error}),
     }
 }
+
 fn actual(source: &str) -> Value {
     let parser = presets::traq::v1::parser();
     json!({"block": result(parser.parse(source)), "inline": result(parser.parse_inline(source))})

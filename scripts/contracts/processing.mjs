@@ -11,6 +11,7 @@ export async function processingFiles(schemas, input) {
     for (const part of parts.slice(0, -1)) target = target[part] ??= {};
     target[parts.at(-1)] = 0;
   }
+
   const files = presetFiles(
     tree,
     "ProcessorPreset",
@@ -31,6 +32,7 @@ export async function processingFiles(schemas, input) {
     for (const match of source.matchAll(/from ["']\.\/([^"']+)\.js["']/g))
       await declaration(match[1]);
   }
+
   let go = "";
   const declarations = new Map();
   function addGo(schema, root = schema) {
@@ -43,6 +45,7 @@ export async function processingFiles(schemas, input) {
       go += source;
     }
   }
+
   for (const name of ["ProcessorOptions", "ProcessOutput"]) {
     await declaration(name);
     const schema = schemas[name];

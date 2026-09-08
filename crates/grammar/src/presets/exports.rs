@@ -18,12 +18,14 @@ pub(crate) fn catalog() -> Catalog {
     let references = catalog.plugin(trap::references::plugin());
     let stamp = catalog.plugin(trap::stamp::plugin());
     let compat = catalog.plugin(trap::compat::plugin());
+
     let commonmark = catalog
         .preset(&super::commonmark::builder())
         .expect("valid CommonMark preset");
     let v1 = catalog
         .preset(&super::traq::v1::builder())
         .expect("valid traQ preset");
+
     catalog.exports = json!({
         "plugins": {
             "commonmark": { "core": core, "html": html },

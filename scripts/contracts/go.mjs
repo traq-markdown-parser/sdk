@@ -1,8 +1,10 @@
 import { shape, typeName, quoted as q } from "./schema.mjs";
+
 const fieldName = (name) =>
   name === "id"
     ? "ID"
     : name.replace(/(^|_)([a-z])/g, (_, p, c) => c.toUpperCase());
+
 function goType(s) {
   if (s.kind === "string" || s.kind === "enum") return "string";
   if (s.kind === "boolean") return "bool";
@@ -12,13 +14,16 @@ function goType(s) {
   if (s.kind === "object") return s.name ?? `struct {${fields(s)}}`;
   throw new Error("Unsupported Go field: " + s.kind);
 }
+
 const fields = (s) =>
   s.fields
     .map((f) => `${fieldName(f.name)} ${goType(f.shape)} \`json:${q(f.name)}\``)
     .join("\n");
+
 export function goContract(schema, root = schema) {
   return `type ${typeName(schema)} struct {\n${fields(shape(schema, root))}\n}\n`;
 }
+
 export function goPayload(wireName, schema) {
   const name = typeName(schema),
     s = shape(schema);
@@ -33,6 +38,7 @@ export function goPayload(wireName, schema) {
     `\n}\nfunc (*${name}) nodePayload() {}\n`
   );
 }
+
 export function goNodes(entries) {
   const names = entries.map(([, schema]) => typeName(schema));
   if (new Set(names).size !== names.length)

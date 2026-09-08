@@ -68,6 +68,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
         dispose: instance.dispose,
       });
     },
+
     createProcessor(
       preset: ProcessorPreset,
       options: ProcessorOptions,
@@ -82,6 +83,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
         dispose: instance.dispose,
       });
     },
+
     dispose() {
       module = undefined;
       for (const instance of instances) instance.dispose();
@@ -97,6 +99,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
       .exports as Wasm;
     const encoder = new TextEncoder(),
       decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+
     function call<T>(
       operation: "configure" | "configure_processor" | "parse" | "process",
       source: string,
@@ -112,8 +115,10 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
         throw new RangeError("Wasm input limit exceeded");
       if (decoder.decode(input) !== source)
         throw new TypeError("Source contains an unpaired surrogate");
+
       const pointer = wasm.input_ptr(input.length);
       if (!pointer) throw new RangeError("Wasm input limit exceeded");
+
       let result: {
         document?: unknown;
         result?: unknown;
@@ -132,6 +137,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
         wasm = undefined;
         throw error;
       }
+
       // Rust validates the AST before encoding; the build ID pairs its types.
       if (result.error)
         throw new Error("Markdown: " + JSON.stringify(result.error), {
@@ -142,6 +148,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
       return (result.result ?? result.document) as T;
     }
     call(configuration, config);
+
     const instance = Object.freeze({
       call,
       dispose() {

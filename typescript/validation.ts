@@ -11,6 +11,7 @@ export const uint = (value: unknown): value is number =>
   Number.isInteger(value) &&
   value >= 0 &&
   value <= 0xffffffff;
+
 export const nullable = (check: Check) => (value: unknown) =>
   value === null || check(value);
 export const oneOf =
@@ -19,6 +20,7 @@ export const oneOf =
     values.includes(value);
 export const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
+
 export function fields<
   R extends Record<string, Check>,
   O extends Record<string, Check> = {},
@@ -32,6 +34,7 @@ export function fields<
     Object.entries(required).every(
       ([key, check]) => Object.hasOwn(value, key) && check(value[key]),
     ) &&
+
     Object.entries(value).every(
       ([key, item]) =>
         Object.hasOwn(required, key) ||

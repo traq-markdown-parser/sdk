@@ -6,6 +6,7 @@ use std::{
 use traq_markdown_grammar::ParseError;
 
 use crate::limits::{MAX_INPUT, MAX_OUTPUT};
+
 #[derive(Default)]
 pub struct Buffers {
     input: Vec<u8>,
@@ -13,6 +14,7 @@ pub struct Buffers {
     valid: bool,
 }
 thread_local! { pub static IO: RefCell<Buffers> = RefCell::default(); }
+
 impl Buffers {
     pub fn reply_document(&mut self, result: &Result<markdown_ast::Document, ParseError>) {
         match result {
@@ -54,6 +56,7 @@ impl Buffers {
         }
         std::str::from_utf8(&self.input).map_err(|_| ParseError::InvalidUtf8)
     }
+
     pub fn reply<T: Serialize, E: Serialize>(
         &mut self,
         field: &'static str,
@@ -71,7 +74,9 @@ impl Buffers {
         success
     }
 }
+
 struct Reply<'a, T, E>(&'static str, &'a Result<T, E>);
+
 impl<T: Serialize, E: Serialize> Serialize for Reply<'_, T, E> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(1))?;
@@ -82,7 +87,9 @@ impl<T: Serialize, E: Serialize> Serialize for Reply<'_, T, E> {
         map.end()
     }
 }
+
 struct LimitedOutput<'a>(&'a mut Vec<u8>);
+
 impl Write for LimitedOutput<'_> {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         if bytes.len() > MAX_OUTPUT.saturating_sub(self.0.len()) {
@@ -95,6 +102,7 @@ impl Write for LimitedOutput<'_> {
         Ok(())
     }
 }
+
 #[unsafe(no_mangle)]
 pub extern "C" fn input_ptr(len: u32) -> u32 {
     IO.with_borrow_mut(|io| {
@@ -110,6 +118,7 @@ pub extern "C" fn input_ptr(len: u32) -> u32 {
         io.input.as_mut_ptr() as u32
     })
 }
+
 #[unsafe(no_mangle)]
 pub extern "C" fn output_ptr() -> u32 {
     IO.with_borrow(|io| io.output.as_ptr() as u32)

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRuntime, presets, isKnownNode } from "../../dist/index.js";
 import { names } from "../../dist/generated/nodes.js";
+
 const bytes = await readFile(
   new URL("../../dist/parser.wasm", import.meta.url),
 );

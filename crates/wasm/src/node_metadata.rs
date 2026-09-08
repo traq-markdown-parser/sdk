@@ -2,6 +2,7 @@ pub(crate) fn export(
     config: &ts_rs::Config,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     use markdown_definitions::NodeType;
+
     let mut nodes = serde_json::Map::new();
     macro_rules! register {
         ($group:literal, $module:ident, $($ty:ident),* $(,)?) => {$(
@@ -15,6 +16,8 @@ pub(crate) fn export(
             }
         )*};
     }
+
     node_types!(register);
+
     Ok(nodes.into())
 }

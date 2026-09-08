@@ -25,7 +25,9 @@ export async function typescriptFiles(manifest, input) {
       for (const match of source.matchAll(/from ["']\.\/([^"']+)\.js["']/g))
         await payload(match[1]);
     }
+
     for (const [, schema] of entries) await payload(schema.title);
+
     files.set(
       `typescript/generated/${group}.ts`,
       "// Generated from Rust contracts. Do not edit.\n" +

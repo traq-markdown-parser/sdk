@@ -10,12 +10,14 @@ pub enum Target<'a> {
 pub struct Links {
     origin: String,
 }
+
 impl Links {
     pub fn new(origin: &str) -> Self {
         Self {
             origin: origin.trim_end_matches('/').into(),
         }
     }
+
     pub fn classify<'a>(&self, url: &'a str) -> Option<Target<'a>> {
         if self.origin.is_empty() {
             return None;
@@ -47,6 +49,7 @@ pub fn is_canonical(value: &str) -> bool {
 mod tests {
     use super::*;
     const ID: &str = "00000000-0000-0000-0000-000000000001";
+
     #[test]
     fn classification_checks_origin_path_and_id_boundaries() {
         let links = Links::new("https://q.example.test/");

@@ -5,6 +5,7 @@ import { shape } from "../../scripts/contracts/schema.mjs";
 import { javascript } from "../../scripts/contracts/javascript.mjs";
 import { goPayload } from "../../scripts/contracts/go.mjs";
 import { nodes, names } from "../../dist/generated/nodes.js";
+
 const manifest = JSON.parse(
   await readFile(
     new URL("../../target/node-contracts/contracts.json", import.meta.url),
@@ -19,6 +20,7 @@ function example(s) {
   if (s.kind === "nullable") return null;
   return Object.fromEntries(s.fields.map((f) => [f.name, example(f.shape)]));
 }
+
 test("generated optional TypeScript guards enforce every exported payload shape", () => {
   for (const [name, schema] of Object.entries(manifest.nodes).map(
     ([key, value]) => [key, value.schema],
@@ -44,6 +46,7 @@ test("generated optional TypeScript guards enforce every exported payload shape"
   );
   assert(!nodes.get(names.Cell)({ alignment: "other" }));
 });
+
 test("unsupported schema constraints fail generation instead of weakening validation", () => {
   const schema = {
     title: "Example",
