@@ -2,15 +2,16 @@ import { buildId } from "../../dist/generated/artifact.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { createParser, presets, isKnownNode } from "../../dist/index.js";
+import { createRuntime, presets, isKnownNode } from "../../dist/index.js";
 import { names } from "../../dist/generated/nodes.js";
 const bytes = await readFile(
   new URL("../../dist/parser.wasm", import.meta.url),
 );
 
 test("failed requests do not poison later calls; resources remain bounded", async (t) => {
-  const core = await createParser(bytes, presets.traq.v1);
-  t.after(() => core.dispose());
+  const runtime = await createRuntime(bytes);
+  t.after(() => runtime.dispose());
+  const core = runtime.createParser(presets.traq.v1);
   for (const [source, code] of [
     ["\ud800", "invalid_utf8"],
     ["x".repeat(65537), "resource_limit"],
@@ -73,10 +74,19 @@ test("artifact pairing, preset selection, disposal and isolated results", async 
     new Uint8Array([1, 2, 3]),
     new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]),
   ])
-    await assert.rejects(createParser(bad, presets.traq.v1));
-  await assert.rejects(createParser(bytes, "traq.invalid"), /Markdown:/);
-  const traq = await createParser(bytes, presets.traq.v1);
-  const common = await createParser(bytes, presets.commonmark);
+    await assert.rejects(async () => {
+      const r = await createRuntime(bad);
+      try {
+        r.createParser(presets.traq.v1);
+      } finally {
+        r.dispose();
+      }
+    });
+  const runtime = await createRuntime(bytes);
+  assert.throws(() => runtime.createParser("traq.invalid"), /Markdown:/);
+  const traq = runtime.createParser(presets.traq.v1);
+  const common = runtime.createParser(presets.commonmark);
+  let replacement;
   try {
     const first = traq.parseInline(":stamp:");
     assert.equal(first.children[0].kind, names.Stamp);
@@ -89,9 +99,18 @@ test("artifact pairing, preset selection, disposal and isolated results", async 
     traq.dispose();
     assert.throws(() => traq.parse("closed"), /disposed/);
     assert.equal(common.parse("still open").source, "still open");
+    replacement = runtime.createParser(presets.traq.v1);
+    assert.equal(
+      replacement.parseInline(":stamp:").children[0].kind,
+      names.Stamp,
+    );
   } finally {
     traq.dispose();
-    common.dispose();
+    runtime.dispose();
+    assert.throws(() => common.parse("closed"), /disposed/);
+    assert.throws(() => replacement.parse("closed"), /disposed/);
+    assert.throws(() => runtime.createParser(presets.commonmark), /disposed/);
+    runtime.dispose();
   }
 });
 
@@ -126,7 +145,8 @@ test("raw ABI validates UTF-8, preset and mode; linear memory is bounded", async
 });
 
 test("Go and TypeScript fixtures retain the Rust AST for blocks and inlines", async () => {
-  const parser = await createParser(bytes, presets.traq.v1);
+  const runtime = await createRuntime(bytes);
+  const parser = runtime.createParser(presets.traq.v1);
   const commonmark = JSON.parse(
     await readFile(
       new URL("../../tests/fixtures/commonmark-0.31.2.json", import.meta.url),
@@ -162,20 +182,21 @@ test("Go and TypeScript fixtures retain the Rust AST for blocks and inlines", as
         }
     }
   } finally {
-    parser.dispose();
+    runtime.dispose();
   }
 });
 
 test("Wasm input views respect their byte range and are copied before async work", async () => {
   const padded = Buffer.concat([Buffer.from([99]), bytes, Buffer.from([99])]);
   const view = padded.subarray(1, padded.length - 1);
-  const pending = createParser(view, presets.traq.v1);
+  const pending = createRuntime(view);
   view.fill(0);
-  const parser = await pending;
+  const runtime = await pending;
+  const parser = runtime.createParser(presets.traq.v1);
   try {
     assert.equal(parser.parse("copied").source, "copied");
   } finally {
-    parser.dispose();
+    runtime.dispose();
   }
 });
 
@@ -192,5 +213,13 @@ test("a valid parser Wasm from a different Rust build is rejected", async () => 
     count++;
   }
   assert(count > 0);
-  await assert.rejects(createParser(other, presets.traq.v1), /does not match/);
+  const runtime = await createRuntime(other);
+  try {
+    assert.throws(
+      () => runtime.createParser(presets.traq.v1),
+      /does not match/,
+    );
+  } finally {
+    runtime.dispose();
+  }
 });

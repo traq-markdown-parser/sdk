@@ -1,12 +1,13 @@
 import {
-  createParser,
+  createRuntime,
   presets,
   isKnownNode,
   type Node,
   type Document,
 } from "@traq-markdown-parser/ts";
 import { names, type ReferenceData } from "@traq-markdown-parser/ts/trap/nodes";
-const parser = await createParser(new Uint8Array(), presets.traq.v1);
+const runtime = await createRuntime(new Uint8Array());
+const parser = runtime.createParser(presets.traq.v1);
 const document: Document = parser.parse("text");
 for (const node of document.children)
   if (node.kind === names.Reference) {
@@ -20,5 +21,5 @@ if (isKnownNode(unknownNode) && unknownNode.kind === names.Reference) {
   void id;
 }
 // @ts-expect-error Only Rust-exported presets are accepted
-await createParser(new Uint8Array(), "not-exported");
-parser.dispose();
+runtime.createParser("not-exported");
+runtime.dispose();

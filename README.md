@@ -25,18 +25,19 @@ npm run examples
 ## TypeScript
 
 ```ts
-import { createParser, presets } from '@traq-markdown-parser/ts'
+import { createRuntime, presets } from '@traq-markdown-parser/ts'
 
-const parser = await createParser(wasmBytes, presets.traq.v1)
+const runtime = await createRuntime(wasmBytes)
 try {
+  const parser = runtime.createParser(presets.traq.v1)
   const document = parser.parse('**hello** :stamp:')
   const inline = parser.parseInline('**hello**')
 } finally {
-  parser.dispose()
+  runtime.dispose()
 }
 ```
 
-`wasmBytes` は `Uint8Array` です。Node.js は `@traq-markdown-parser/ts/parser.wasm` を `readFile` で読み、ブラウザーは `new Uint8Array(await response.arrayBuffer())` を渡します。Parser は再利用できます。
+`wasmBytes` は `Uint8Array` です。Node.js は `@traq-markdown-parser/ts/parser.wasm` を `readFile` で読み、ブラウザーは `new Uint8Array(await response.arrayBuffer())` を渡します。Runtime と Parser は再利用できます。同じ Runtime から異なるプリセットの Parser も作成できます。
 
 ノード型は判別可能な union です。文法別の payload 型と任意利用の guard は `/commonmark/nodes`・`/generic/nodes`・`/trap/nodes`、全体の一覧は `/nodes` から利用できます。
 

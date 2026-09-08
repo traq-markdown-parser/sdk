@@ -9,20 +9,21 @@ Rust API は [parser core](https://github.com/traq-markdown-parser/core/blob/mai
 ## TypeScript
 
 ```ts
-import { createParser, presets } from '@traq-markdown-parser/ts'
+import { createRuntime, presets } from '@traq-markdown-parser/ts'
 import { names } from '@traq-markdown-parser/ts/nodes'
 
-const parser = await createParser(wasmBytes, presets.traq.v1)
+const runtime = await createRuntime(wasmBytes)
 try {
+  const parser = runtime.createParser(presets.traq.v1)
   for (const node of parser.parseInline('[資料](https://example.com)').children) {
     if (node.kind === names.Link) console.log(node.data.destination)
   }
 } finally {
-  parser.dispose()
+  runtime.dispose()
 }
 ```
 
-生成時のビルド ID と渡された Wasm の初期化応答を照合し、一つの instance に指定の文法を設定します。`parse` と `parseInline` は同期関数です。`dispose` は instance への参照を解放し、以降の解析を拒否します。繰り返し解放できます。
+`createRuntime` は Wasm を非同期で一度だけコンパイルします。`runtime.createParser(preset)` は同期的に独立した instance を作成し、生成時のビルド ID を初期化応答と照合して文法を設定します。`parse` と `parseInline` も同期関数です。`parser.dispose()` はその Parser を、`runtime.dispose()` は全 Parser とコンパイル済み module への参照を解放します。解放後の解析・Parser 作成は拒否します。繰り返し解放できます。
 
 入力は文字列で、64 KiB 以下の UTF-8 に変換できる必要があります。片側だけの surrogate は拒否します。Rust の解析エラーは `Error.cause` に構造化した詳細を保持します。入力エラーや Rust の resource limit は Parser を無効にしません。Wasm trap や通信の破損後は新しい Parser を作成します。
 

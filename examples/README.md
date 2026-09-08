@@ -12,6 +12,6 @@ Run `npm ci` and `npm run build` at the repository root first.
 
 Rust resolves the pinned `markdown-traq` Git dependency. Go uses a local `replace` for this repository's module. TypeScript imports this package's public exports. No registry publication or application checkout is required.
 
-The Go example accepts `-wasm /path/to/parser.wasm`. TypeScript uses `readFile` in Node.js; browser applications can pass `new Uint8Array(await response.arrayBuffer())` to `createParser(bytes, presets.traq.v1)`.
+The Go example accepts `-wasm /path/to/parser.wasm`. TypeScript uses `readFile` in Node.js; browser applications can pass `new Uint8Array(await response.arrayBuffer())` to `createRuntime(bytes)`, then use `runtime.createParser(presets.traq.v1)`.
 
 HTML rendering examples live in [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it). Native notification and extraction examples live in [trap](https://github.com/traq-markdown-parser/trap/tree/main/crates/traq-processing/examples).
