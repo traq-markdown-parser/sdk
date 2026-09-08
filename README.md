@@ -22,8 +22,6 @@ traQ 向けの Markdown 文法・通知処理の構成と、Rust・WebAssembly�
 trap-extension にあります。このリポジトリがそれらに依存し、traQ 向けに組み合わせます。
 下位の部品はこの配布物に依存しません。bindings はここで選んだ型とプリセットに対応します。
 
-旧リポジトリ名 `sdk` とパッケージ名からの変更は [MIGRATION.md](MIGRATION.md) を参照してください。
-
 ## ビルド
 
 Node.js 24 以降、Go 1.25 以降、rustup が必要です。Rust と Wasm target は `rust-toolchain.toml` で固定しています。
