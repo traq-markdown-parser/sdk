@@ -10,56 +10,38 @@ function goType(s) {
   if (s.kind === "nullable") return "*" + goType(s.inner);
   throw new Error("Unsupported Go field: " + s.kind);
 }
-const strings = (names) =>
-  names.length ? "[]string{" + names.map(q).join(",") + "}" : "nil";
-export function goPayload(group, wireName, schema) {
+export function goPayload(wireName, schema) {
   const name = typeName(schema),
     s = shape(schema);
   if (s.kind !== "object") throw new Error("Payload must be object");
-  const required = s.fields.filter((f) => f.required).map((f) => f.name);
-  const optional = s.fields.filter((f) => !f.required).map((f) => f.name);
-  const nullable = s.fields
-    .filter((f) => f.shape.kind === "nullable")
-    .map((f) => f.name);
-  const enums = s.fields.filter(
-    (f) =>
-      (f.shape.kind === "nullable" ? f.shape.inner : f.shape).kind === "enum",
+  return (
+    `const ${name}Name = ${q(wireName)}\ntype ${name} struct {\n` +
+    s.fields
+      .map(
+        (f) => `${fieldName(f.name)} ${goType(f.shape)} \`json:${q(f.name)}\``,
+      )
+      .join("\n") +
+    `\n}\nfunc (*${name}) nodePayload() {}\n`
   );
-  const checks = enums
-    .map((f) => {
-      const nullable = f.shape.kind === "nullable",
-        inner = nullable ? f.shape.inner : f.shape;
-      const field = `value.${fieldName(f.name)}`;
-      const access = nullable ? `*${field}` : field;
-      const invalid = inner.values.map((v) => `${access} != ${q(v)}`).join(" && ");
-      const condition = nullable ? `${field} != nil && (${invalid})` : invalid;
-      return `if ${condition} { return nil, fmt.Errorf("invalid ${f.name}") }`;
-    })
-    .join("\n");
-  const fields = s.fields.map((f) =>
-    `${fieldName(f.name)} ${goType(f.shape)} \`json:${q(f.name)}\``).join("\n");
-  return `// Code generated from Rust node payload types. DO NOT EDIT.
-package ${group}
-import ("encoding/json"; ${enums.length ? '"fmt"; ' : ""}"github.com/traq-markdown-parser/sdk/go/ast")
-const ${name}Name = ${q(wireName)}
-type ${name} struct {
-${fields}
 }
-func decode${name}(raw json.RawMessage) (any,error) {
-var value ${name}
-if err := ast.DecodeFields(raw,&value,${strings(required)},${strings(optional)},${strings(nullable)}); err != nil {return nil,err}
-${checks}
-return value,nil
-}
-`;
-}
-export function goRegistry(group, entries) {
-  const decoders = entries.map(([, s]) => `${typeName(s)}Name: decode${typeName(s)},`).join("\n");
-  return `// Code generated from Rust node payload types. DO NOT EDIT.
-package ${group}
-import "github.com/traq-markdown-parser/sdk/go/ast"
-func Registry() ast.Registry {return ast.Registry{
-${decoders}
-}}
-`;
+export function goNodes(entries) {
+  const names = entries.map(([, schema]) => typeName(schema));
+  if (new Set(names).size !== names.length)
+    throw new Error("Duplicate generated payload type");
+  return (
+    '// Code generated from Rust contracts. DO NOT EDIT.\npackage markdown\nimport("encoding/json";"fmt")\n' +
+    'type Span struct {Start uint32 `json:"start"`; End uint32 `json:"end"`}\n' +
+    'type Document struct {Source string `json:"source"`; Children []Node `json:"children"`}\n' +
+    "type Payload interface {nodePayload()}\n" +
+    'type Node struct {Kind string `json:"kind"`; Span Span `json:"span"`; Data Payload `json:"data"`; Children []Node `json:"children,omitempty"`}\n' +
+    entries.map(([key, schema]) => goPayload(key, schema)).join("\n") +
+    "func (n *Node) UnmarshalJSON(raw []byte) error {\n" +
+    'var wire struct {Kind string `json:"kind"`; Span Span `json:"span"`; Data json.RawMessage `json:"data"`; Children []Node `json:"children"`}\n' +
+    "if err:=json.Unmarshal(raw,&wire);err!=nil{return err}\nvar payload Payload\nswitch wire.Kind {\n" +
+    entries
+      .map(([, s]) => `case ${typeName(s)}Name: payload = &${typeName(s)}{}`)
+      .join("\n") +
+    '\ndefault:return fmt.Errorf("unsupported Rust node: %s",wire.Kind)\n}\n' +
+    "if err:=json.Unmarshal(wire.Data,payload);err!=nil{return err}\n*n=Node{wire.Kind,wire.Span,payload,wire.Children};return nil\n}\n"
+  );
 }

@@ -5,37 +5,34 @@
   "description": "Composable Rust Markdown parser with Go and TypeScript bindings.",
   "exports": {
     ".": {
-      "types": "./dist/parser/index.d.ts",
-      "import": "./dist/parser/index.js"
-    },
-    "./definitions": {
-      "types": "./dist/core/definitions/index.d.ts",
-      "import": "./dist/core/definitions/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./nodes": {
-      "types": "./dist/parser/generated/nodes.d.ts",
-      "import": "./dist/parser/generated/nodes.js"
+      "types": "./dist/generated/nodes.d.ts",
+      "import": "./dist/generated/nodes.js"
     },
     "./commonmark/nodes": {
-      "types": "./dist/commonmark/contracts/nodes.d.ts",
-      "import": "./dist/commonmark/contracts/nodes.js"
+      "types": "./dist/generated/commonmark.d.ts",
+      "import": "./dist/generated/commonmark.js"
     },
     "./generic/nodes": {
-      "types": "./dist/commonmark/extensions/contracts/nodes.d.ts",
-      "import": "./dist/commonmark/extensions/contracts/nodes.js"
+      "types": "./dist/generated/generic.d.ts",
+      "import": "./dist/generated/generic.js"
     },
     "./trap/nodes": {
-      "types": "./dist/trap/contracts/nodes.d.ts",
-      "import": "./dist/trap/contracts/nodes.js"
+      "types": "./dist/generated/trap.d.ts",
+      "import": "./dist/generated/trap.js"
     },
     "./parser.wasm": "./dist/parser.wasm",
     "./contract.json": "./dist/contract.json"
   },
   "files": [
-    "dist/core",
-    "dist/parser",
-    "dist/commonmark",
-    "dist/trap",
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/validation.js",
+    "dist/validation.d.ts",
+    "dist/generated",
     "dist/parser.wasm",
     "dist/contract.json",
     "THIRD_PARTY_NOTICES.md"

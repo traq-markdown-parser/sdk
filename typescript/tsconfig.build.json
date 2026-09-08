@@ -5,10 +5,15 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "declaration": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "../dist",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.d.mts"]
+  "include": [
+    "index.ts",
+    "validation.ts",
+    "generated/**/*.ts"
+  ]
 }

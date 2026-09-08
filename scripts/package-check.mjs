@@ -30,7 +30,7 @@ const [packed] = JSON.parse(npm(
   ["pack", "--ignore-scripts", "--json", "--pack-destination", dist], root,
 ));
 const shipped = new Set(packed.files.map((file) => file.path));
-for (const file of ["LICENSE", "THIRD_PARTY_NOTICES.md", "dist/parser.wasm", "dist/parser/index.js", "dist/parser/index.d.ts"])
+for (const file of ["LICENSE", "THIRD_PARTY_NOTICES.md", "dist/parser.wasm", "dist/index.js", "dist/index.d.ts"])
   if (!shipped.has(file)) throw new Error("Packed package is missing " + file);
 for (const file of shipped)
   if (/^(?:typescript|crates|go|tests|experiments|\.private|node_modules)\//.test(file) || /\.(?:css|scss|mjs|mts|tgz)$/.test(file))

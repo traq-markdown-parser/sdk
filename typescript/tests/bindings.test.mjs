@@ -4,10 +4,10 @@ import { readFile } from "node:fs/promises";
 import { shape } from "../../scripts/contracts/schema.mjs";
 import { javascript } from "../../scripts/contracts/javascript.mjs";
 import { goPayload } from "../../scripts/contracts/go.mjs";
-import { nodes, names } from "../../dist/parser/generated/nodes.js";
+import { nodes, names } from "../../dist/generated/nodes.js";
 const manifest = JSON.parse(
   await readFile(
-    new URL("../src/parser/generated/contracts.json", import.meta.url),
+    new URL("../../target/node-contracts/contracts.json", import.meta.url),
   ),
 );
 
@@ -19,8 +19,10 @@ function example(s) {
   if (s.kind === "nullable") return null;
   return Object.fromEntries(s.fields.map((f) => [f.name, example(f.shape)]));
 }
-test("generated host codecs enforce every exported payload shape", () => {
-  for (const [name, schema] of Object.entries(manifest.nodes).map(([key, value]) => [key, value.schema])) {
+test("generated optional TypeScript guards enforce every exported payload shape", () => {
+  for (const [name, schema] of Object.entries(manifest.nodes).map(
+    ([key, value]) => [key, value.schema],
+  )) {
     const valid = example(shape(schema)),
       check = nodes.get(name);
     assert(check(valid), name);
@@ -55,7 +57,7 @@ test("unsupported schema constraints fail generation instead of weakening valida
     /Unsupported schema keyword/,
   );
   assert.throws(
-    () => goPayload("test", "test/example@1", schema),
+    () => goPayload("test/example@1", schema),
     /Unsupported schema keyword/,
   );
   for (const unsupported of [

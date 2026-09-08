@@ -1,6 +1,8 @@
 #[macro_use]
 #[path = "../node_types.rs"]
 mod node_types;
+#[path = "../limits.rs"]
+mod limits;
 #[path = "../node_metadata.rs"]
 mod node_metadata;
 #[path = "../nodes.rs"]
@@ -23,7 +25,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Check that metadata and codec registrations agree before writing bindings.
     let _ = nodes::codec();
     let manifest = serde_json::json!({
-        "catalog": markdown_traq::bindings::bundled().describe(),
+        "presets": markdown_traq::bindings::bundled().exports["presets"],
+        "limits": {"inputBytes": limits::MAX_INPUT, "outputBytes": limits::MAX_OUTPUT, "memoryBytes": limits::MEMORY_BYTES},
         "nodes": node_metadata::export(&config)?,
     });
     std::fs::create_dir_all(&directory)?;

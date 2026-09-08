@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,6 +22,7 @@ run("cargo", [
   "run", "--locked", "--release", "-p", "traq-markdown-wasm", "--features", "contracts",
   "--bin", "export-node-contracts", "--", contracts,
 ]);
+await rm(path.join(root, "dist"), { recursive: true, force: true });
 await mkdir(path.join(root, "dist"), { recursive: true });
 await copyFile(
   path.join(target, "wasm32-unknown-unknown/release/traq_markdown_wasm.wasm"),

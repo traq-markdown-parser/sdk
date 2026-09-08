@@ -5,8 +5,7 @@ use std::{
     io::{self, Write},
 };
 
-pub const MAX_INPUT: usize = 65_536;
-pub const MAX_OUTPUT: usize = 1_048_576;
+use crate::limits::{MAX_INPUT, MAX_OUTPUT};
 #[derive(Default)]
 pub struct Buffers {
     input: Vec<u8>,

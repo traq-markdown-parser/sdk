@@ -22,17 +22,16 @@ cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
 `check:package` installs a packed npm archive into a fresh temporary consumer and checks its public declarations, AST parsing, and Wasm digest. It does not publish to a registry. The archive remains in `dist/`; the temporary consumer is removed afterwards.
 
-Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache results. Changes to Go concurrency also require `go -C go test -race ./core` with a supported C compiler installed.
+Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache results. Changes to Go concurrency also require `go -C go test -race ./...` with a supported C compiler installed.
 
 ## Ownership
 
 | Location | Responsibility |
 | --- | --- |
 | `crates/wasm` | Wasm ABI, distribution catalog, registered node contract list |
-| `typescript/src/core` | Grammar-independent host runtime and shared declarations |
-| `typescript/src/parser` | This distribution's public API and generated node union |
-| `typescript/src/commonmark`, `typescript/src/trap` | Generated contract types and payload validators |
-| `go` | Go host runtime and generated bindings |
+| `typescript/index.ts`, `go/parser.go` | Thin Wasm transport and lifecycle |
+| `typescript/validation.ts` | Generic helpers for optional generated payload guards |
+| `typescript/generated`, `go/*_generated.go` | Rust-derived payloads, presets and artifact metadata |
 | `scripts/contracts` | Contract-to-binding generators |
 | `tests/fixtures` | Public cross-language and distribution compatibility fixtures |
 | `examples/{rust,go,typescript}` | Public API consumers |
@@ -41,7 +40,7 @@ Bindings are authored in `.ts`; `.js` and `.d.ts` are build outputs. Rust is the
 
 ## Updating dependencies
 
-The unpublished Rust crates use Git dependencies with a fixed revision and a package version. `Cargo.lock` is committed. Update all dependencies from one repository to the same revision, then rebuild and inspect the generated contract diff. Runtime initialization rejects a Wasm catalog that does not match its SDK.
+The unpublished Rust crates use Git dependencies with a fixed revision and a package version. `Cargo.lock` is committed. Update all dependencies from one repository to the same revision, then rebuild and inspect the generated contract diff. Parser initialization rejects a Wasm SHA-256 that does not match its generated SDK.
 
 For simultaneous local development, keep `core`, `commonmark`, `trap`, and `sdk` beside one another. Use a machine-local Cargo patch configuration. Override the entire edited repository so its shared AST and declaration types have one Cargo package identity. For example:
 

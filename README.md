@@ -1,16 +1,16 @@
 # traQ Markdown SDK
 
-Rust の Markdown 文法を WebAssembly として配布し、TypeScript と Go から同じ AST を利用するための SDK です。
+Rust の Markdown パーサーを、一つの WebAssembly バイナリとして TypeScript と Go から呼び出す SDK です。文法・AST の契約・検証は Rust が所有します。
 
 - npm: **`@traq-markdown-parser/ts`**
 - Go module: **`github.com/traq-markdown-parser/sdk/go`**
-- Wasm: ABI **2** / AST **4**
+- Wasm: ABI **3** / AST **4**
 
-文法の実装は [core](https://github.com/traq-markdown-parser/core)、[commonmark](https://github.com/traq-markdown-parser/commonmark)、[trap](https://github.com/traq-markdown-parser/trap) が所有します。このリポジトリは収録する文法・ノード契約を選択し、Wasm と対応する bindings を一緒に生成・検証します。
+文法の実装は [core](https://github.com/traq-markdown-parser/core)、[commonmark](https://github.com/traq-markdown-parser/commonmark)、[trap](https://github.com/traq-markdown-parser/trap) にあります。このリポジトリで配布するプリセットを選び、Wasm と対応する型を生成します。
 
 ## ビルド
 
-Node.js 24 以降、Go 1.25 以降、rustup が必要です。Rust と Wasm target は `rust-toolchain.toml` で固定しています。Windows の PowerShell でも実行できます。
+Node.js 24 以降、Go 1.25 以降、rustup が必要です。Rust と Wasm target は `rust-toolchain.toml` で固定しています。
 
 ```sh
 npm ci
@@ -18,39 +18,47 @@ npm run build
 npm run examples
 ```
 
-他のリポジトリの checkout は不要です。Cargo が manifest に固定された Git revision を取得します。Wasm と JavaScript / 型定義は `dist/` に生成し、ソース管理には含めません。Rust 由来の TypeScript 契約型・検証コードと Go binding は生成済みソースも管理します。
+他のリポジトリの checkout は不要です。Cargo が固定した Git revision を取得します。Wasm・JavaScript・型定義は `dist/` に出力します。Rust から生成する TypeScript / Go のソースと、対応する Wasm の SHA-256 はソース管理します。バイナリと SDK は同じビルドの組を配布してください。
 
-パッケージはまだレジストリへ公開していません。ローカルでは `npm pack` で生成したアーカイブを利用できます。
+まだレジストリへ公開していません。TypeScript は `npm pack` で作ったアーカイブを利用できます。
 
 ## TypeScript
 
 ```ts
-import { loadRuntime } from '@traq-markdown-parser/ts'
+import { createParser, presets } from '@traq-markdown-parser/ts'
 
-const runtime = await loadRuntime(wasmBytes)
+const parser = await createParser(wasmBytes, presets.traq.v1)
 try {
-  const parser = runtime.parser(runtime.presets.traq.v1)
-  try {
-    const document = parser.parse('**hello** :stamp:')
-    const inline = parser.parseInline('**hello**')
-  } finally {
-    parser.dispose()
-  }
+  const document = parser.parse('**hello** :stamp:')
+  const inline = parser.parseInline('**hello**')
 } finally {
-  runtime.dispose()
+  parser.dispose()
 }
 ```
 
-Node.js では `@traq-markdown-parser/ts/parser.wasm` を `readFile` で読み、ブラウザーでは配布した Wasm URL を `fetch` して `ArrayBuffer` を渡します。Runtime と Parser はメッセージごとに作り直さず再利用できます。
+`wasmBytes` は `Uint8Array` です。Node.js は `@traq-markdown-parser/ts/parser.wasm` を `readFile` で読み、ブラウザーは `new Uint8Array(await response.arrayBuffer())` を渡します。Parser は再利用できます。
 
-既知ノードは判別可能な union です。文法別の payload 型と guard は `/commonmark/nodes`・`/generic/nodes`・`/trap/nodes`、全体の一覧は `/nodes` から利用できます。`/definitions` は parser と外部 renderer が共有する Plugin 宣言です。
+ノード型は判別可能な union です。文法別の payload 型と任意利用の guard は `/commonmark/nodes`・`/generic/nodes`・`/trap/nodes`、全体の一覧は `/nodes` から利用できます。
 
-HTML / CSS は別パッケージの [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it) が担当します。bindings には HTML renderer や markdown-it への依存はありません。
+## Go
 
-## 文法と処理
+```go
+import markdown "github.com/traq-markdown-parser/sdk/go"
 
-`runtime.presets.commonmark` は CommonMark、`runtime.presets.traq.v1` は traQ V1 です。`toBuilder()` から plugin を追加・削除・並べ替えた独立した文法を作れます。preset は最初の Parser 作成時にコンパイルされ、独自構成の `build()` はその場で検証・構築されます。
+parser, err := markdown.New(ctx, wasmBytes, markdown.PresetTraQV1)
+if err != nil { return err }
+defer parser.Close(ctx)
+document, err := parser.Parse(ctx, "**hello** :stamp:")
+```
 
-文法版と保存済みメッセージの対応は利用側で管理します。原文を適切な preset で再解析する運用を想定し、永続 AST の互換層は設けません。
+`Parse` / `ParseInline` は `*markdown.Document` を返します。`Node.Data` の具体的な型も Rust から生成します。一つの Parser の呼び出しは直列化します。並列実行には Parser を複数作ります。
 
-[API と所有権](docs/implementation.md)、[Rust / Go / TypeScript の実行例](examples/README.md)、[開発と検証](CONTRIBUTING.md) を参照してください。
+## 文法の変更
+
+TypeScript の `presets.commonmark` / `presets.traq.v1`、Go の `PresetCommonMark` / `PresetTraQV1` は Rust が公開するプリセットから生成します。独自の文法は Rust で組み立て、配布層からプリセットとして公開して再ビルドします。ホスト API はプリセットの選択、解析、解放に絞っています。
+
+手書きの実装は TypeScript の `index.ts` と任意の payload guard 用の `validation.ts`、Go の `parser.go` です。文法ビルダー、Plugin / Rule のミラー、文法ハンドル、worker pool は持ちません。
+
+HTML / CSS は [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it) が担当します。
+
+[API と実装](docs/implementation.md)、[実行例](examples/README.md)、[開発と検証](CONTRIBUTING.md) を参照してください。
