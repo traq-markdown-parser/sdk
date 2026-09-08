@@ -1,0 +1,58 @@
+// Generated from the Rust node contracts. Do not edit.
+import type { Blockquote } from "../../commonmark/contracts/Blockquote.js";
+import type { CodeBlock } from "../../commonmark/contracts/CodeBlock.js";
+import type { Emphasis } from "../../commonmark/contracts/Emphasis.js";
+import type { Hardbreak } from "../../commonmark/contracts/Hardbreak.js";
+import type { Heading } from "../../commonmark/contracts/Heading.js";
+import type { HtmlBlock } from "../../commonmark/contracts/HtmlBlock.js";
+import type { HtmlInline } from "../../commonmark/contracts/HtmlInline.js";
+import type { Image } from "../../commonmark/contracts/Image.js";
+import type { InlineCode } from "../../commonmark/contracts/InlineCode.js";
+import type { Link } from "../../commonmark/contracts/Link.js";
+import type { List } from "../../commonmark/contracts/List.js";
+import type { ListItem } from "../../commonmark/contracts/ListItem.js";
+import type { Paragraph } from "../../commonmark/contracts/Paragraph.js";
+import type { Softbreak } from "../../commonmark/contracts/Softbreak.js";
+import type { Strong } from "../../commonmark/contracts/Strong.js";
+import type { Text } from "../../commonmark/contracts/Text.js";
+import type { ThematicBreak } from "../../commonmark/contracts/ThematicBreak.js";
+import type { MarkData } from "../../commonmark/extensions/contracts/MarkData.js";
+import type { BlockMathData } from "../../commonmark/extensions/contracts/BlockMathData.js";
+import type { InlineMathData } from "../../commonmark/extensions/contracts/InlineMathData.js";
+import type { StrikethroughData } from "../../commonmark/extensions/contracts/StrikethroughData.js";
+import type { CellData } from "../../commonmark/extensions/contracts/CellData.js";
+import type { RowData } from "../../commonmark/extensions/contracts/RowData.js";
+import type { TableData } from "../../commonmark/extensions/contracts/TableData.js";
+import type { BlankLineData } from "../../trap/contracts/BlankLineData.js";
+import type { ReferenceData } from "../../trap/contracts/ReferenceData.js";
+import type { SpoilerData } from "../../trap/contracts/SpoilerData.js";
+import type { StampData } from "../../trap/contracts/StampData.js";
+export type NodeKind =
+  | { kind: "markdown_commonmark_contracts::nodes::Blockquote"; data: Blockquote }
+  | { kind: "markdown_commonmark_contracts::nodes::CodeBlock"; data: CodeBlock }
+  | { kind: "markdown_commonmark_contracts::nodes::Emphasis"; data: Emphasis }
+  | { kind: "markdown_commonmark_contracts::nodes::Hardbreak"; data: Hardbreak }
+  | { kind: "markdown_commonmark_contracts::nodes::Heading"; data: Heading }
+  | { kind: "markdown_commonmark_contracts::nodes::HtmlBlock"; data: HtmlBlock }
+  | { kind: "markdown_commonmark_contracts::nodes::HtmlInline"; data: HtmlInline }
+  | { kind: "markdown_commonmark_contracts::nodes::Image"; data: Image }
+  | { kind: "markdown_commonmark_contracts::nodes::InlineCode"; data: InlineCode }
+  | { kind: "markdown_commonmark_contracts::nodes::Link"; data: Link }
+  | { kind: "markdown_commonmark_contracts::nodes::List"; data: List }
+  | { kind: "markdown_commonmark_contracts::nodes::ListItem"; data: ListItem }
+  | { kind: "markdown_commonmark_contracts::nodes::Paragraph"; data: Paragraph }
+  | { kind: "markdown_commonmark_contracts::nodes::Softbreak"; data: Softbreak }
+  | { kind: "markdown_commonmark_contracts::nodes::Strong"; data: Strong }
+  | { kind: "markdown_commonmark_contracts::nodes::Text"; data: Text }
+  | { kind: "markdown_commonmark_contracts::nodes::ThematicBreak"; data: ThematicBreak }
+  | { kind: "markdown_generic_contracts::mark::MarkData"; data: MarkData }
+  | { kind: "markdown_generic_contracts::math::BlockMathData"; data: BlockMathData }
+  | { kind: "markdown_generic_contracts::math::InlineMathData"; data: InlineMathData }
+  | { kind: "markdown_generic_contracts::strikethrough::StrikethroughData"; data: StrikethroughData }
+  | { kind: "markdown_generic_contracts::table::CellData"; data: CellData }
+  | { kind: "markdown_generic_contracts::table::RowData"; data: RowData }
+  | { kind: "markdown_generic_contracts::table::TableData"; data: TableData }
+  | { kind: "markdown_trap_contracts::compat::BlankLineData"; data: BlankLineData }
+  | { kind: "markdown_trap_contracts::reference::ReferenceData"; data: ReferenceData }
+  | { kind: "markdown_trap_contracts::spoiler::SpoilerData"; data: SpoilerData }
+  | { kind: "markdown_trap_contracts::stamp::StampData"; data: StampData };

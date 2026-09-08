@@ -1,0 +1,77 @@
+{
+  "name": "@traq-markdown-parser/ts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Composable Rust Markdown parser with Go and TypeScript bindings.",
+  "exports": {
+    ".": {
+      "types": "./dist/parser/index.d.ts",
+      "import": "./dist/parser/index.js"
+    },
+    "./definitions": {
+      "types": "./dist/core/definitions/index.d.ts",
+      "import": "./dist/core/definitions/index.js"
+    },
+    "./nodes": {
+      "types": "./dist/parser/generated/nodes.d.ts",
+      "import": "./dist/parser/generated/nodes.js"
+    },
+    "./commonmark/nodes": {
+      "types": "./dist/commonmark/contracts/nodes.d.ts",
+      "import": "./dist/commonmark/contracts/nodes.js"
+    },
+    "./generic/nodes": {
+      "types": "./dist/commonmark/extensions/contracts/nodes.d.ts",
+      "import": "./dist/commonmark/extensions/contracts/nodes.js"
+    },
+    "./trap/nodes": {
+      "types": "./dist/trap/contracts/nodes.d.ts",
+      "import": "./dist/trap/contracts/nodes.js"
+    },
+    "./parser.wasm": "./dist/parser.wasm",
+    "./contract.json": "./dist/contract.json"
+  },
+  "files": [
+    "dist/core",
+    "dist/parser",
+    "dist/commonmark",
+    "dist/trap",
+    "dist/parser.wasm",
+    "dist/contract.json",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test typescript/tests/*.test.mjs",
+    "typecheck": "tsc -p typescript/tsconfig.json --noEmit && tsc -p examples/typescript/tsconfig.json",
+    "test:rust": "cargo test --workspace --all-features",
+    "test:go": "go -C go test -count=1 ./...",
+    "example:rust": "cargo run -p traq-markdown-example",
+    "example:go": "go -C examples/go run .",
+    "example:ts": "node examples/typescript/main.mts",
+    "examples": "npm run example:rust && npm run example:go && npm run example:ts",
+    "check:package": "node scripts/package-check.mjs",
+    "check:architecture": "node scripts/check-js-boundaries.mjs",
+    "build:ts": "tsc -p typescript/tsconfig.build.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/traq-markdown-parser/sdk.git"
+  },
+  "author": "traP (https://github.com/traPtitech)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/traq-markdown-parser/sdk/issues"
+  },
+  "homepage": "https://github.com/traq-markdown-parser/sdk#readme",
+  "sideEffects": false,
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "26.3.0",
+    "typescript": "6.0.3"
+  },
+  "type": "module"
+}

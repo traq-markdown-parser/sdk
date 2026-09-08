@@ -1,0 +1,31 @@
+[package]
+name = "traq-markdown-wasm"
+version.workspace = true
+description = "WebAssembly interface for the shared Markdown parser."
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+contracts = ["markdown-parser/contracts","dep:ts-rs", "dep:schemars", "markdown-commonmark-contracts/contracts", "markdown-generic-contracts/contracts", "markdown-trap-contracts/contracts"]
+
+[[bin]]
+name = "export-node-contracts"
+required-features = ["contracts"]
+
+[dependencies]
+markdown-parser = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+markdown-traq = { git = "https://github.com/traq-markdown-parser/trap.git", rev = "e687f0e7e249b4f428e94a2bcd478abcf8de55d6", version = "0.1.0" }
+markdown-codec = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+markdown-ast = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+markdown-definitions = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
+markdown-commonmark-contracts = { git = "https://github.com/traq-markdown-parser/commonmark.git", rev = "00fdb814d980ee4e326eb6a05d8ff4bba289d291", version = "0.1.0" }
+markdown-generic-contracts = { git = "https://github.com/traq-markdown-parser/commonmark.git", rev = "00fdb814d980ee4e326eb6a05d8ff4bba289d291", version = "0.1.0" }
+markdown-trap-contracts = { git = "https://github.com/traq-markdown-parser/trap.git", rev = "e687f0e7e249b4f428e94a2bcd478abcf8de55d6", version = "0.1.0" }
+ts-rs = { version = "12", optional = true, features = ["serde-json-impl"] }
+schemars = { version = "1.2.2", optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

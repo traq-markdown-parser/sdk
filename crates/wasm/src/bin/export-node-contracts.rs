@@ -1,0 +1,35 @@
+#[macro_use]
+#[path = "../node_types.rs"]
+mod node_types;
+#[path = "../node_metadata.rs"]
+mod node_metadata;
+#[path = "../nodes.rs"]
+mod nodes;
+
+#[cfg(test)]
+#[path = "../node_contract_tests.rs"]
+mod tests;
+
+#[cfg(test)]
+#[path = "../compatibility_tests.rs"]
+mod compatibility_tests;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let directory = std::env::args().nth(1).ok_or("Pass the output directory")?;
+    let config = ts_rs::Config::default()
+        .with_out_dir(&directory)
+        .with_import_extension(Some("js"));
+    <markdown_traq::ParseError as ts_rs::TS>::export_all(&config)?;
+    // Check that metadata and codec registrations agree before writing bindings.
+    let _ = nodes::codec();
+    let manifest = serde_json::json!({
+        "catalog": markdown_traq::bindings::bundled().describe(),
+        "nodes": node_metadata::export(&config)?,
+    });
+    std::fs::create_dir_all(&directory)?;
+    std::fs::write(
+        std::path::Path::new(&directory).join("contracts.json"),
+        serde_json::to_vec_pretty(&manifest)?,
+    )?;
+    Ok(())
+}

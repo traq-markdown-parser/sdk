@@ -1,0 +1,61 @@
+# Development
+
+## Setup and verification
+
+Use Node.js 24+, Go 1.25+, and rustup. The Rust toolchain and Wasm target are pinned in `rust-toolchain.toml`. Windows additionally needs the MSVC C++ build tools; WSL and Bash are not required.
+
+```sh
+npm ci
+npm run build
+npm test
+npm run typecheck
+npm run test:rust
+npm run test:go
+npm run examples
+npm run check:architecture
+npm run check:package
+cargo fmt --all --check
+cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+```
+
+`build` compiles Wasm, exports Rust contracts to `target/node-contracts`, generates TypeScript and Go sources, compiles TypeScript into JavaScript and declarations with `tsc`, and writes the artifact digest to `dist/contract.json`.
+
+`check:package` installs a packed npm archive into a fresh temporary consumer and checks its public declarations, AST parsing, and Wasm digest. It does not publish to a registry. The archive remains in `dist/`; the temporary consumer is removed afterwards.
+
+Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache results. Changes to Go concurrency also require `go -C go test -race ./core` with a supported C compiler installed.
+
+## Ownership
+
+| Location | Responsibility |
+| --- | --- |
+| `crates/wasm` | Wasm ABI, distribution catalog, registered node contract list |
+| `typescript/src/core` | Grammar-independent host runtime and shared declarations |
+| `typescript/src/parser` | This distribution's public API and generated node union |
+| `typescript/src/commonmark`, `typescript/src/trap` | Generated contract types and payload validators |
+| `go` | Go host runtime and generated bindings |
+| `scripts/contracts` | Contract-to-binding generators |
+| `tests/fixtures` | Public cross-language and distribution compatibility fixtures |
+| `examples/{rust,go,typescript}` | Public API consumers |
+
+Bindings are authored in `.ts`; `.js` and `.d.ts` are build outputs. Rust is the source of truth for generated payload types and validators. Do not hand-edit generated files. HTML rendering and CSS belong to `traPtitech/traq-markdown-it`.
+
+## Updating dependencies
+
+The unpublished Rust crates use Git dependencies with a fixed revision and a package version. `Cargo.lock` is committed. Update all dependencies from one repository to the same revision, then rebuild and inspect the generated contract diff. Runtime initialization rejects a Wasm catalog that does not match its SDK.
+
+For simultaneous local development, keep `core`, `commonmark`, `trap`, and `sdk` beside one another. Use a machine-local Cargo patch configuration. Override the entire edited repository so its shared AST and declaration types have one Cargo package identity. For example:
+
+```toml
+[patch."https://github.com/traq-markdown-parser/core.git"]
+markdown-ast = { path = "/absolute/path/to/core/crates/ast" }
+markdown-definitions = { path = "/absolute/path/to/core/crates/definitions" }
+markdown-definitions-derive = { path = "/absolute/path/to/core/crates/definitions-derive" }
+markdown-parser = { path = "/absolute/path/to/core/crates/parser" }
+markdown-renderer = { path = "/absolute/path/to/core/crates/renderer" }
+markdown-extractor = { path = "/absolute/path/to/core/crates/extractor" }
+markdown-codec = { path = "/absolute/path/to/core/crates/codec" }
+```
+
+Pass the file with `cargo --config /absolute/path/to/local.toml ...`; use equivalent absolute Windows paths on Windows. Do not commit local overrides or the resulting lockfile changes. Release verification uses the committed revisions without patches.
+
+Fixtures contain no production messages or credentials. Their provenance and update policy are documented in [tests/fixtures](tests/fixtures/README.md).
