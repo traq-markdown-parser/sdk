@@ -30,4 +30,4 @@ let inline = customized.parse_inline("$x$")?;
 公開 TS / Go SDK の Wasm はこの配布層を利用し、AST 4 の共通形式で結果を受け取る。
 
 `npm run check:architecture` で、処理プリセットと拡張部品の依存方向、
-および Processor が AST codec を使わないことを検査する。
+および ネイティブ renderer / extractor が AST codec を使わないことを検査する。

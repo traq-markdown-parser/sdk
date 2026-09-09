@@ -6,5 +6,5 @@ license.workspace = true
 publish = false
 
 [dependencies]
-traq-markdown-processor = { path = "../../crates/processor" }
+traq-markdown-processing = { path = "../../crates/processing" }
 traq-markdown-grammar = { path = "../../crates/grammar" }

@@ -85,31 +85,31 @@ test("Rust processing options and nested results generate without host changes",
     const details = object("Details", {
       labels: { type: "array", items: { type: "string" } },
     });
-    const options = object("ProcessorOptions", {
+    const options = object("ExtractorOptions", {
       compact: { type: "boolean" },
       details: { $ref: "#/$defs/Details" },
     });
     options.$defs = { Details: details };
-    const output = object("ProcessOutput", {
+    const output = object("Extraction", {
       details: { $ref: "#/$defs/Details" },
       batches: { type: "array", items: { $ref: "#/$defs/Details" } },
     });
     output.$defs = { Details: details };
     await writeFile(
-      path.join(directory, "ProcessorOptions.ts"),
-      'import type { Details } from "./Details.js";\nexport type ProcessorOptions = { compact:boolean; details:Details };',
+      path.join(directory, "ExtractorOptions.ts"),
+      'import type { Details } from "./Details.js";\nexport type ExtractorOptions = { compact:boolean; details:Details };',
     );
     await writeFile(
-      path.join(directory, "ProcessOutput.ts"),
-      'import type { Details } from "./Details.js";\nexport type ProcessOutput = { details:Details; batches:Array<Details> };',
+      path.join(directory, "Extraction.ts"),
+      'import type { Details } from "./Details.js";\nexport type Extraction = { details:Details; batches:Array<Details> };',
     );
     await writeFile(
       path.join(directory, "Details.ts"),
       "export type Details = { labels:Array<string> };",
     );
     const schemas = {
-      ProcessorOptions: options,
-      ProcessOutput: output,
+      ExtractorOptions: options,
+      Extraction: output,
     };
     const files = await processingFiles(schemas, directory);
     const go = files.get("go/processing_generated.go");

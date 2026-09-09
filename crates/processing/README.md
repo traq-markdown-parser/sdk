@@ -31,7 +31,7 @@ spoiler は描画した内容の Unicode scalar value 数だけ `█` を並べ�
 
 参照抽出は user / group / channel の ID を正規化して返します。順序・重複を保持し、
 spoiler 内も対象です。コード内は parser が参照ノードを生成しないため対象になりません。
-`message::Processor` は同じ AST から本文・添付 ID・引用 ID を作ります。本文は Markdown 記法と改行を保ち、参照 JSON をラベル、ファイル・引用 JSON と裸の URL を表示用の文字列へ置換します。明示的なリンクの Markdown 記法はそのまま保持します。添付・引用 ID は出現順・重複・spoiler 内を含み、コードや数式内の文字列は対象になりません。ユーザー情報の解決や通知送信は含みません。
+`message::Extractor` は同じ AST から本文・添付 ID・引用 ID を作ります。本文は Markdown 記法と改行を保ち、参照 JSON をラベル、ファイル・引用 JSON と裸の URL を表示用の文字列へ置換します。明示的なリンクの Markdown 記法はそのまま保持します。添付・引用 ID は出現順・重複・spoiler 内を含み、コードや数式内の文字列は対象になりません。ユーザー情報の解決や通知送信は含みません。
 
 JSON 設定や Wasm のリソース管理は SDK 接続層の責務です。
 `references.embeddings` は認識した参照・埋め込みの `raw` / `type` / `id` を AST の出現順に返します。Bot イベントはこの結果を再利用でき、ID の UUID 検証前の文字列も保持されます。
@@ -39,3 +39,5 @@ JSON 設定や Wasm のリソース管理は SDK 接続層の責務です。
 埋め込みの生成・復元は `embedding::plan(&document)` が担当します。Rust の AST で認識された通常テキストだけを名前解決候補にし、コード・数式・リンク・画像・既存の埋め込みに新しい参照を作りません。エスケープされた記号と文字参照も保持します。ユーザー、グループ、ユーザー名の ASCII 接頭辞の順に解決を試み、チャンネル名も同じ計画に含めます。
 
 候補の位置は元のソースに対する UTF-8 byte offset です。Go の `EmbedReferences` / TypeScript の `embedReferences` に解析結果の `embedding` とアプリの名前解決関数を渡すと、解決できた範囲だけを JSON 埋め込みへ置換します。その他の Markdown 記法と空白は保ちます。復元結果は `embedding.unembeddedText`、メンション検知は解析済み `references` に対する `mentionsUser` を利用できます。DB・store・送信・クリップボード操作はアプリ側の責務です。
+
+公開 API は `extraction::Extractor::extract(&Document)` と `rendering::PlainTextRenderer::render(&Document)` です。どちらも呼び出し側が解析した AST を借用し、文法の選択・原文の再解析は行いません。

@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestProcessing(t *testing.T) {
+func TestASTConsumers(t *testing.T) {
 	ctx := context.Background()
 	wasm, err := os.ReadFile("../dist/parser.wasm")
 	if err != nil {
@@ -22,22 +22,30 @@ func TestProcessing(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer runtime.Close(ctx)
-	processor, err := runtime.NewProcessor(
-		ctx,
-		PresetTraQV1,
-		ProcessorOptions{Origin: "https://q.example.test"},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plain, err := runtime.NewProcessor(ctx, PresetTraQV1, ProcessorOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
 	parser, err := runtime.NewParser(ctx, PresetTraQV1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	parse := func(source string) *Document {
+		doc, err := parser.Parse(ctx, source)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return doc
+	}
+	extractor, err := runtime.NewExtractor(ctx, ExtractorOptions{Origin: "https://q.example.test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	renderer, err := runtime.NewPlainTextRenderer(ctx, RendererOptions{Origin: "https://q.example.test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	plain, err := runtime.NewPlainTextRenderer(ctx, RendererOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	raw, err := os.ReadFile("../tests/fixtures/processing-notifications.json")
 	if err != nil {
 		t.Fatal(err)
@@ -50,131 +58,132 @@ func TestProcessing(t *testing.T) {
 		t.Fatal(len(fixtures))
 	}
 	for _, fixture := range fixtures {
-		output, err := processor.Process(ctx, fixture.Source)
-		if err != nil {
-			t.Fatalf("%s: %v", fixture.Name, err)
-		}
-		if output.NotificationText != fixture.Notification {
-			t.Fatalf("%s: got %q, want %q", fixture.Name, output.NotificationText, fixture.Notification)
+		text, err := renderer.Render(ctx, parse(fixture.Source))
+		if err != nil || text != fixture.Notification {
+			t.Fatalf("%s: got %q, want %q: %v", fixture.Name, text, fixture.Notification, err)
 		}
 	}
+
 	const id = "00000000-0000-0000-0000-000000000001"
 	const user = `!{"type":"user","id":"` + id + `","raw":"@alice"}`
-	result, err := processor.Process(ctx, user+" !!"+user+"!! `"+user+"`")
+	document := parse("**" + user + "** !!" + user + "!! `" + user + "`")
+	original, _ := json.Marshal(document)
+	result, err := extractor.Extract(ctx, document)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(result.References.Mentions, []string{id, id}) ||
-		result.NotificationText != "@alice ██████ "+user {
-		t.Fatalf("%+v", result)
+	text, err := renderer.Render(ctx, document)
+	if err != nil || text != "@alice ██████ "+user || !reflect.DeepEqual(result.References.Mentions, []string{id, id}) || !strings.HasPrefix(result.MessageText, "**@alice**") {
+		t.Fatalf("%+v %q %v", result, text, err)
 	}
+	after, _ := json.Marshal(document)
+	if string(after) != string(original) {
+		t.Fatal("consumers changed document")
+	}
+
 	url := "https://q.example.test/files/" + id
-	output, err := plain.Process(ctx, url)
-	if err != nil || output.NotificationText != url {
-		t.Fatalf("%+v %v", output, err)
+	if text, err := plain.Render(ctx, parse(url)); err != nil || text != url {
+		t.Fatalf("%q %v", text, err)
 	}
-	if _, err := runtime.NewProcessor(ctx, Preset("missing"), ProcessorOptions{}); err == nil {
-		t.Fatal("accepted missing preset")
+	for _, version := range []string{"commonmark", "traq.v1", "commonmark"} {
+		p, err := runtime.NewParser(ctx, Preset(version))
+		if err != nil {
+			t.Fatal(err)
+		}
+		doc, err := p.Parse(ctx, user+" !!secret!!")
+		if err != nil {
+			t.Fatal(err)
+		}
+		r, err := extractor.Extract(ctx, doc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		text, err := renderer.Render(ctx, doc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version == "commonmark" {
+			if len(r.References.Mentions) != 0 || text != user+" !!secret!!" {
+				t.Fatalf("%+v %q", r, text)
+			}
+		} else if len(r.References.Mentions) != 1 || text != "@alice ██████" {
+			t.Fatalf("%+v %q", r, text)
+		}
+		p.Close(ctx)
 	}
-	if _, err := runtime.NewProcessor(
-		ctx,
-		PresetTraQV1,
-		ProcessorOptions{Origin: strings.Repeat("x", 2049)},
-	); err == nil {
+
+	invalid := parse("text")
+	invalid.Children[0].Span.End++
+	if _, err := extractor.Extract(ctx, invalid); err == nil {
+		t.Fatal("accepted invalid AST")
+	}
+	if _, err := renderer.Render(ctx, invalid); err == nil {
+		t.Fatal("rendered invalid AST")
+	}
+	if _, err := runtime.NewExtractor(ctx, ExtractorOptions{Origin: strings.Repeat("x", 2049)}); err == nil {
 		t.Fatal("accepted oversized origin")
 	}
-	for _, source := range []string{
-		strings.Repeat("x", inputBytes+1),
-		string([]byte{255}),
-		strings.Repeat("!!", 100) + "deep" + strings.Repeat("!!", 100),
-	} {
-		if _, err := processor.Process(ctx, source); err == nil {
-			t.Fatal("accepted invalid input")
-		}
+	if _, err := runtime.NewPlainTextRenderer(ctx, RendererOptions{Origin: strings.Repeat("x", 2049)}); err == nil {
+		t.Fatal("accepted oversized origin")
 	}
+	large := parse(strings.Repeat("x", 60000))
+	if r, err := extractor.Extract(ctx, large); err != nil || r.MessageText != large.Source {
+		t.Fatalf("large AST: %v", err)
+	}
+	if text, err := renderer.Render(ctx, large); err != nil || text != large.Source {
+		t.Fatalf("large AST: %v", err)
+	}
+
 	canceled, cancel := context.WithCancel(ctx)
 	cancel()
-	if _, err := processor.Process(canceled, "x"); !errors.Is(err, context.Canceled) {
+	if _, err := extractor.Extract(canceled, document); !errors.Is(err, context.Canceled) {
+		t.Fatal(err)
+	}
+	if _, err := renderer.Render(canceled, document); !errors.Is(err, context.Canceled) {
 		t.Fatal(err)
 	}
 	var wg sync.WaitGroup
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for j := 0; j < 8; j++ {
-				output, err := processor.Process(ctx, "**next**")
-				if err != nil {
-					t.Error(err)
+			for range 8 {
+				if r, err := extractor.Extract(ctx, document); err != nil || !reflect.DeepEqual(r, result) {
+					t.Errorf("concurrent extraction: %v", err)
 					return
 				}
-				if output.NotificationText != "next" {
-					t.Error(output)
+				if text, err := renderer.Render(ctx, document); err != nil || text != "@alice ██████ "+user {
+					t.Errorf("concurrent rendering: %v", err)
+					return
 				}
 			}
 		}()
 	}
 	wg.Wait()
-
-	if err := processor.Close(ctx); err != nil {
+	extractor.Close(ctx)
+	extractor.Close(ctx)
+	if _, err := extractor.Extract(ctx, document); err == nil {
+		t.Fatal("closed extractor accepted document")
+	}
+	if _, err := renderer.Render(ctx, document); err != nil {
 		t.Fatal(err)
 	}
-	if err := processor.Close(ctx); err != nil {
+	renderer.Close(ctx)
+	renderer.Close(ctx)
+	if _, err := renderer.Render(ctx, document); err == nil {
+		t.Fatal("closed renderer accepted document")
+	}
+	if _, err := plain.Render(ctx, document); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := processor.Process(ctx, "closed"); err == nil {
-		t.Fatal("closed processor accepted input")
+	runtime.Close(ctx)
+	if _, err := plain.Render(ctx, document); err == nil {
+		t.Fatal("runtime left renderer open")
 	}
-	if _, err := plain.Process(ctx, "still alive"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := parser.Parse(ctx, "still alive"); err != nil {
-		t.Fatal(err)
-	}
-	if err := runtime.Close(ctx); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := plain.Process(ctx, "closed"); err == nil {
-		t.Fatal("Runtime.Close left a processor open")
-	}
-	if _, err := runtime.NewProcessor(ctx, PresetTraQV1, ProcessorOptions{}); err == nil {
+	if _, err := runtime.NewExtractor(ctx, ExtractorOptions{}); err == nil {
 		t.Fatal("closed runtime accepted creation")
 	}
-	if !reflect.DeepEqual(result.References.Mentions, []string{id, id}) {
-		t.Fatal("results alias Wasm memory")
-	}
-}
-
-func TestStoredGrammarSelection(t *testing.T) {
-	ctx := context.Background()
-	wasm, err := os.ReadFile("../dist/parser.wasm")
-	if err != nil {
-		t.Fatal(err)
-	}
-	runtime, err := NewRuntime(ctx, wasm)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer runtime.Close(ctx)
-	processors := make(map[string]*Processor)
-	for _, version := range []string{"commonmark", "traq.v1"} {
-		processor, err := runtime.NewProcessor(ctx, Preset(version), ProcessorOptions{})
-		if err != nil {
-			t.Fatal(err)
-		}
-		processors[version] = processor
-	}
-	for _, version := range []string{"commonmark", "traq.v1", "commonmark"} {
-		output, err := processors[version].Process(ctx, "!!secret!!")
-		if err != nil {
-			t.Fatal(err)
-		}
-		expected := "!!secret!!"
-		if version == "traq.v1" {
-			expected = "██████"
-		}
-		if output.NotificationText != expected {
-			t.Fatalf("%s: got %q, want %q", version, output.NotificationText, expected)
-		}
+	if _, err := runtime.NewPlainTextRenderer(ctx, RendererOptions{}); err == nil {
+		t.Fatal("closed runtime accepted creation")
 	}
 }

@@ -13,8 +13,7 @@ traQ 向けの Markdown 文法・通知処理の構成と、Rust・WebAssembly�
 | 場所 | 責任 |
 | --- | --- |
 | `crates/grammar` | CommonMark・汎用拡張・traP 拡張を選択し、文法プリセットを構成 |
-| `crates/processing` | 通知の表示方針と参照抽出のプリセットを構成 |
-| `crates/processor` | 一度の解析から通知テキストと参照一覧を生成 |
+| `crates/processing` | AST を受け取る PlainText renderer と extractor、および traQ 向けの方針を構成 |
 | `crates/wasm` | 配布する文法・ノード型・処理 API を Wasm として公開 |
 | `go`・`typescript`・`scripts/contracts` | この配布物に対応する bindings と型生成 |
 
@@ -84,8 +83,8 @@ Go / TypeScript には文法構成を複製せず、Wasm 境界では文法バ�
 `presets.traq.v1` / `PresetTraQV1` はその文字列を表す生成済み定数です。
 Rust の配布層がバージョンを解決し、共通のパーサー生成や処理機構は文法バージョンを知りません。
 
-TypeScript の `runtime.createParser(version)` / `runtime.createProcessor(version, options)`、
-Go の `NewParser(ctx, Preset(version))` / `NewProcessor(ctx, Preset(version), options)` に
+TypeScript の `runtime.createParser(version)`、
+Go の `NewParser(ctx, Preset(version))` に
 DB から読み出したバージョンを指定できます。未知のバージョンはエラーになり、最新文法への暗黙の置き換えはしません。
 同じ Runtime から作成したパーサーを `Map<string, Parser>` に保持して使い分けられます。
 
@@ -122,37 +121,43 @@ HTML 描画の共通基盤は core、構文別の描画は commonmark と trap-e
 
 [API と実装](docs/implementation.md)、[実行例](examples/README.md)、[開発と検証](CONTRIBUTING.md) を参照してください。
 
-## 通知テキストと参照抽出
+## AST からの描画と抽出
 
-`Processor` は原文を一度だけ Rust AST に解析し、その AST を通知用レンダラーと参照抽出器が借用します。ホストとの間では最終結果だけを渡します。
+Parser が返す Document を renderer と extractor に直接渡します。文法を選択するのは Parser だけです。
+TypeScript の HTML renderer はホスト上で AST を描画し、Extractor と Go の PlainTextRenderer は
+渡された AST を Wasm の Rust 実装に渡します。Markdown 原文の再解析は行いません。
 
 ```ts
-import { createRuntime, presets } from '@traq-markdown-parser/traq'
-
-const runtime = await createRuntime(wasmBytes)
-try {
-  const processor = runtime.createProcessor(presets.traq.v1, {
-    origin: 'https://q.example.test',
-  })
-  const { notificationText, references } = processor.process('**hello** !!secret!!')
-  // notificationText: "hello ██████"
-  // references: { mentions: [], groupMentions: [], channelLinks: [] }
-} finally {
-  runtime.dispose()
-}
+const parser = runtime.createParser(presets.traq.v1)
+const extractor = runtime.createExtractor({ origin: 'https://q.example.test' })
+const document = parser.parse('**hello** !!secret!!')
+const { references, embedding, messageText } = extractor.extract(document)
+const html = view.render(document)
 ```
 
 ```go
-processor, err := runtime.NewProcessor(ctx, markdown.PresetTraQV1,
-    markdown.ProcessorOptions{Origin: "https://q.example.test"})
+parser, err := runtime.NewParser(ctx, markdown.PresetTraQV1)
 if err != nil { return err }
-defer processor.Close(ctx)
-result, err := processor.Process(ctx, "**hello** !!secret!!")
+extractor, err := runtime.NewExtractor(ctx, markdown.ExtractorOptions{Origin: origin})
+if err != nil { return err }
+renderer, err := runtime.NewPlainTextRenderer(ctx, markdown.RendererOptions{Origin: origin})
+if err != nil { return err }
+document, err := parser.Parse(ctx, "**hello** !!secret!!")
+if err != nil { return err }
+metadata, err := extractor.Extract(ctx, document)
+if err != nil { return err }
+notification, err := renderer.Render(ctx, document)
 ```
 
-Parser と Processor は同じ Runtime のコンパイル結果を共有し、独立した instance と設定を持ちます。Processor のライフサイクルと Go の直列化・キャンセル規則は Parser と同じです。プリセット・設定・結果の型は Rust から生成します。ネイティブ Rust では `traq-markdown-processor` crate の `Processor` を使います。
+各 instance は同じ Runtime のコンパイル結果を共有し、独立した設定を持ちます。
+Go の呼び出し直列化・キャンセル規則は各 instance に適用され、Runtime の解放で全 instance を閉じます。
+ネイティブ Rust は `traq_markdown_processing::extraction::Extractor` と
+`rendering::PlainTextRenderer` が `&Document` を借用します。
 
-通知は spoiler をマスクし、空白を正規化した一行のテキストです。参照はユーザー・グループ・チャンネルの UUID を種類別に返し、文書順・重複・spoiler 内の参照を保持します。コード内の文字列は参照として抽出しません。`origin` は通知中の traQ 添付・引用 URL の表示判定用です。添付・引用 ID の抽出と Bot 用 PlainText はこの API の対象外で、アプリ側の方針として残ります。
+PlainTextRenderer は spoiler をマスクし、空白を正規化した一行の通知テキストを返します。
+Extractor は参照・添付 ID・引用 ID・埋め込み編集計画と、Markdown 記法を保つ `messageText` を返します。
+参照は文書順・重複・spoiler 内を保持し、コード内の文字列は抽出しません。
+`origin` が空なら traQ のファイル・メッセージ URL を通常の URL として扱います。
 
 ## TypeScript / HTML rendering
 
@@ -191,6 +196,6 @@ Wasm の起動は利用側が明示的に行います。`/renderer` を import �
 
 Use `npm run corpus:collect`, `npm run corpus:compare`, and `npm run corpus:report` to collect messages and generate offline HTML/MHTML difference reports. See [Corpus comparison](docs/CORPUS.md) for inputs, options, and output files.
 
-Go consumers use `github.com/traq-markdown-parser/traq/go` for presets and artifact pairing. Shared AST/transport live in the core Go module; payload factories live in commonmark and trap-extension. `Processor.Process` returns notification text, source-preserving message text, references with embedding metadata, attachment IDs and citation IDs from one Rust parse.
+Go consumers use `github.com/traq-markdown-parser/traq/go` for presets and artifact pairing. Shared AST/transport live in the core Go module; payload factories live in commonmark and trap-extension. `Extractor.Extract` returns source-preserving message text, references, embedding edits, attachment IDs and citation IDs from the supplied Document. `PlainTextRenderer.Render` independently renders that Document for notifications.
 
 Embedding edits are also shared: Rust derives `output.embedding` from the same AST. Pass that plan and an application identity resolver to `embedReferences` (TypeScript) or `EmbedReferences` (Go). `output.embedding.unembeddedText` restores reference labels for copying, and `mentionsUser` checks the extracted references. See [processing presets](crates/processing/README.md) for the editing rules.

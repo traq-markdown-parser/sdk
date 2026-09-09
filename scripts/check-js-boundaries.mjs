@@ -5,17 +5,6 @@ const { default: assert } = await import("node:assert/strict");
 assert.equal(Object.keys(pkg.dependencies ?? {}).length, 0);
 await import("./check-rendering.mjs");
 const { execFileSync } = await import("node:child_process");
-const dependencies = execFileSync(
-  "cargo",
-  ["tree", "--locked", "-p", "traq-markdown-processor", "--edges", "normal"],
-  { cwd: root, encoding: "utf8" },
-);
-assert(
-  !dependencies.includes("markdown-codec"),
-  "Native processing must borrow the AST without a codec dependency",
-);
-console.log("Native processing: no AST codec dependency");
-
 for (const name of [
   "traq-markdown-processing",
   "markdown-trap-text",
@@ -28,7 +17,7 @@ for (const name of [
     { cwd: root, encoding: "utf8" },
   );
   assert(
-    !/markdown-parser v|markdown-codec v|traq-markdown-grammar v|traq-markdown-processor v|traq-markdown-wasm v/.test(
+    !/markdown-parser v|markdown-codec v|traq-markdown-grammar v|traq-markdown-wasm v/.test(
       tree,
     ),
     name +
@@ -41,9 +30,7 @@ const syntax = execFileSync(
   { cwd: root, encoding: "utf8" },
 );
 assert(
-  !/traq-markdown-grammar v|traq-markdown-processor v|traq-markdown-wasm v/.test(
-    syntax,
-  ),
+  !/traq-markdown-grammar v|traq-markdown-wasm v/.test(syntax),
   "Extension syntax must not depend on the traQ distribution",
 );
 console.log(

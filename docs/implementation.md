@@ -65,7 +65,7 @@ AST の構造・意味・資源制限は Rust の parser と codec が検証し�
 
 生成器は object、string、boolean、文字列 enum、nullable、u8 / u32 を扱います。未対応の形・制約や payload 型名の衝突は生成エラーです。新しい形を追加する場合は生成器を拡張します。通常のノードやプリセット追加では手書きのホスト実装を変更しません。
 
-Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小さな通信面です。各ホスト instance は Parser または Processor を所有します。入力上限 64 KiB、出力上限 1 MiB、memory 上限 32 MiB を Rust で定義し、ホストに必要な上限も生成します。
+Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小さな通信面です。各ホスト instance は Parser・Extractor・PlainTextRenderer のいずれかを所有します。Markdown 原文の上限は 64 KiB です。AST を含む通信入出力上限 1 MiB、memory 上限 32 MiB を Rust で定義し、ホストに必要な上限も生成します。
 
 ビルド ID は Rust ソース、Cargo.lock、manifest と固定 toolchain 設定の内容から生成する不一致検出用の値です。改行とパス表記を正規化し、ビルド環境が違っても同じ値になります。配布物の真正性を証明する署名ではありません。`dist/contract.json` は診断用に実際の Wasm の SHA-256 も記録します。
 
@@ -75,12 +75,25 @@ core の `/renderer` は受け取った Document から HTML を作ります。�
 
 通知・参照抽出のネイティブ Rust API は [processing](https://github.com/traq-markdown-parser/traq/tree/main/crates/processing) にあります。保存済みメッセージの文法版は利用側で管理し、原文を対応するプリセットで再解析します。永続 AST の互換層は設けません。
 
-## Processing pipeline
+## AST consumers
 
-`crates/processor` composes the Rust parser, notification renderer and reference extractor. `Processor::process` parses once and lends the same native Document to both consumers; it does not depend on the AST codec. The reusable renderer and extractor implementations remain in core/commonmark/trap-extension, independent of this distribution and its transport.
+The traQ processing crate exposes `extraction::Extractor::extract(&Document)` and
+`rendering::PlainTextRenderer::render(&Document)`. They borrow the supplied native
+AST and do not depend on a parser or codec. The reusable renderer and extractor
+implementations remain in core/commonmark/trap-extension.
 
-Wasm additionally exports `configure_processor` and `process`. Configuration supplies a grammar version string and `ProcessorOptions`; the Rust distribution resolves the version to a Grammar and constructs the parser; processing accepts the original UTF-8 source and returns `{result: ProcessOutput}` or `{error: string}`. No AST is serialized in this path. Processing errors currently carry a message, without a stable machine-readable classification. Applications must not classify those errors by matching their text.
+Wasm exports `configure_extractor` / `extract` and `configure_renderer` / `render`.
+Configuration accepts the corresponding generated options, without a grammar version.
+Each operation accepts Document JSON, validates it with the Rust codec, then invokes
+the native consumer. No Markdown parsing occurs in these operations. The reply is
+`{result: Extraction}` or `{result: string}`, respectively, or `{error: string}`.
+Errors have no stable machine-readable classification; applications must not match their text.
 
-The generated result contains `notificationText` and `references.{mentions,groupMentions,channelLinks}`. Go generates named nested structures and arrays from schemars; TypeScript declarations come from ts-rs. New processing options, output fields and preset variants are generated without modifying host transports. Unsupported schema constraints fail generation.
+The extractor returns messageText, references, attachments, citations and an embedding plan.
+The renderer returns notification text. Go options and nested results are generated from
+schemars, and TypeScript declarations from ts-rs. TypeScript HTML rendering calls the
+host renderer directly with the same Document type.
 
-The source, output and memory bounds also apply to processors. The Go cancellation and instance disposal rules above apply to both instance types; disposal of a Runtime closes all its parsers and processors. An empty origin leaves file/message URLs as text. Notification rendering, attachment/citation ID extraction and Bot PlainText are separate policies: this pipeline provides only notification rendering and user/group/channel reference extraction.
+AST JSON has the transport's 1 MiB bound; decoded documents retain the parser's
+64 KiB source, depth and node bounds. Go cancellation and disposal rules apply to
+all instances. Runtime disposal closes every parser, extractor and renderer.

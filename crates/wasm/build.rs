@@ -34,8 +34,6 @@ fn main() {
         "../grammar/Cargo.toml",
         "../processing/src",
         "../processing/Cargo.toml",
-        "../processor/src",
-        "../processor/Cargo.toml",
         "build.rs",
         "Cargo.toml",
         "../../Cargo.toml",

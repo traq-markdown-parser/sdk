@@ -11,12 +11,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let without_math = Parser::new(&grammar);
     drop(grammar);
     println!("{:#?}", without_math.parse_inline("$x$")?);
-    let processor = traq_markdown_processor::Processor::new(
-        traq_markdown_grammar::bindings::parser("traq.v1").unwrap(),
-        traq_markdown_processor::ProcessorOptions {
+    let extractor = traq_markdown_processing::extraction::Extractor::new(
+        traq_markdown_processing::extraction::ExtractorOptions {
             origin: "https://q.example.test".into(),
         },
     )?;
-    println!("{:#?}", processor.process("**hello** !!secret!!")?);
+    println!(
+        "{:#?}",
+        extractor.extract(&parser.parse("**hello** !!secret!!")?)?
+    );
+    let renderer = traq_markdown_processing::rendering::PlainTextRenderer::new(
+        traq_markdown_processing::rendering::RendererOptions::default(),
+    )?;
+    let document = parser.parse("**hello** !!secret!!")?;
+    println!("{}", renderer.render(&document)?);
     Ok(())
 }

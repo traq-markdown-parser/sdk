@@ -16,4 +16,4 @@ The Go example accepts `-wasm /path/to/parser.wasm`. TypeScript uses `readFile` 
 
 HTML rendering examples live in [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it). Native notification and extraction examples live in [this repository](../crates/processing/examples).
 
-Each example also processes a message into notification text and reference lists. Native Rust uses the local `traq-markdown-processor` crate. Go and TypeScript create a Processor from the same Runtime as their Parser.
+Each example passes a parsed Document directly to an Extractor. Rust and Go also render the AST with a PlainTextRenderer. Rust uses the local `traq-markdown-processing` crate; Go and TypeScript create their Extractor from the same Runtime as their Parser.

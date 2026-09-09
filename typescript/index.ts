@@ -1,10 +1,7 @@
-import type {
-  ProcessorOptions,
-  ProcessOutput,
-} from "./generated/processing.js";
+import type { ExtractorOptions, Extraction } from "./generated/processing.js";
 export type {
-  ProcessorOptions,
-  ProcessOutput,
+  ExtractorOptions,
+  Extraction,
   References,
   EmbeddedInfo,
   EmbeddingPlan,
@@ -28,8 +25,8 @@ interface Wasm extends WebAssembly.Exports {
   input_ptr(length: number): number;
   output_ptr(): number;
   configure(): number;
-  configure_processor(): number;
-  process(): number;
+  configure_extractor(): number;
+  extract(): number;
   parse(mode: number): number;
 }
 export interface Parser {
@@ -38,14 +35,14 @@ export interface Parser {
   dispose(): void;
 }
 
-export interface Processor {
-  process(source: string): ProcessOutput;
+export interface Extractor {
+  extract(document: Document): Extraction;
   dispose(): void;
 }
 
 export interface Runtime {
   createParser(preset: string): Parser;
-  createProcessor(preset: string, options: ProcessorOptions): Processor;
+  createExtractor(options: ExtractorOptions): Extractor;
   dispose(): void;
 }
 
@@ -66,14 +63,14 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
       });
     },
 
-    createProcessor(preset: string, options: ProcessorOptions): Processor {
+    createExtractor(options: ExtractorOptions): Extractor {
       const instance = instantiate(
-        "configure_processor",
-        JSON.stringify({ preset, options }),
+        "configure_extractor",
+        JSON.stringify(options),
       );
       return Object.freeze({
-        process: (source: string) =>
-          instance.call<ProcessOutput>("process", source),
+        extract: (document: Document) =>
+          instance.call<Extraction>("extract", JSON.stringify(document)),
         dispose: instance.dispose,
       });
     },
@@ -87,7 +84,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
   });
 
   function instantiate(
-    configuration: "configure" | "configure_processor",
+    configuration: "configure" | "configure_extractor",
     config: string,
   ) {
     if (!module) {
@@ -99,7 +96,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
       decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
     function call<T>(
-      operation: "configure" | "configure_processor" | "parse" | "process",
+      operation: "configure" | "configure_extractor" | "parse" | "extract",
       source: string,
       mode = 0,
     ): T {

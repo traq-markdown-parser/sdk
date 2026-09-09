@@ -1,16 +1,12 @@
 // Code generated from Rust processing contracts. DO NOT EDIT.
 package markdown
 
-type ProcessorOptions struct {
-	Origin string `json:"origin"`
-}
-type ProcessOutput struct {
-	Attachments      []string      `json:"attachments"`
-	Citations        []string      `json:"citations"`
-	Embedding        EmbeddingPlan `json:"embedding"`
-	NotificationText string        `json:"notificationText"`
-	PlainText        string        `json:"plainText"`
-	References       References    `json:"references"`
+type Extraction struct {
+	Attachments []string      `json:"attachments"`
+	Citations   []string      `json:"citations"`
+	Embedding   EmbeddingPlan `json:"embedding"`
+	MessageText string        `json:"messageText"`
+	References  References    `json:"references"`
 }
 type EmbeddedInfo struct {
 	ID   string `json:"id"`
@@ -34,4 +30,10 @@ type References struct {
 	Embeddings    []EmbeddedInfo `json:"embeddings"`
 	GroupMentions []string       `json:"groupMentions"`
 	Mentions      []string       `json:"mentions"`
+}
+type ExtractorOptions struct {
+	Origin string `json:"origin"`
+}
+type RendererOptions struct {
+	Origin string `json:"origin"`
 }

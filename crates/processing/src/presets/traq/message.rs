@@ -12,18 +12,18 @@ pub struct Message {
     pub citations: Vec<String>,
 }
 
-pub struct Processor {
+pub struct Extractor {
     links: Links,
 }
 
-impl Processor {
+impl Extractor {
     pub fn new(origin: &str) -> Self {
         Self {
             links: Links::new(origin),
         }
     }
 
-    pub fn process(&self, document: &Document) -> Result<Message, &'static str> {
+    pub fn extract(&self, document: &Document) -> Result<Message, &'static str> {
         document
             .validate(ValidationLimits::default())
             .map_err(|_| "invalid_node")?;

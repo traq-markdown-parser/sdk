@@ -16,6 +16,9 @@ mod tests;
 #[path = "../compatibility_tests.rs"]
 mod compatibility_tests;
 
+use traq_markdown_processing::extraction::{Extraction, ExtractorOptions};
+use traq_markdown_processing::rendering::RendererOptions;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let directory = std::env::args().nth(1).ok_or("Pass the output directory")?;
     let config = ts_rs::Config::default()
@@ -27,13 +30,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     macro_rules! processing_type {
         ($($ty:ident),*) => {
             $(
-                <traq_markdown_processor::$ty as ts_rs::TS>::export_all(&config)?;
+                <$ty as ts_rs::TS>::export_all(&config)?;
                 let schema = schemars::generate::SchemaSettings::default()
                     .with(|settings| {
                         settings.contract = schemars::generate::Contract::Serialize
                     })
                     .into_generator()
-                    .into_root_schema_for::<traq_markdown_processor::$ty>();
+                    .into_root_schema_for::<$ty>();
                 processing.insert(
                     stringify!($ty).into(),
                     serde_json::to_value(schema)?,
@@ -41,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )*
         };
     }
-    processing_type!(ProcessorOptions, ProcessOutput);
+    processing_type!(ExtractorOptions, Extraction, RendererOptions);
 
     // Check that metadata and codec registrations agree before writing bindings.
     let _ = nodes::codec();

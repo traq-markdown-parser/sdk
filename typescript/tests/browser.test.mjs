@@ -22,7 +22,8 @@ test("failed requests do not poison later calls; resources remain bounded", asyn
       (e) =>
         code === "invalid_utf8"
           ? e instanceof TypeError
-          : e instanceof RangeError,
+          : e.cause?.code === "resource_limit" &&
+            e.cause?.resource === "input_bytes",
     );
   }
   assert.throws(() => core.parse(2), TypeError);

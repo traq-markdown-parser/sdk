@@ -37,11 +37,13 @@ const identities = {
 
 test("embedding and restoration use Rust AST ranges without reparsing source text", async () => {
   const runtime = await createRuntime(bytes);
-  const processor = runtime.createProcessor(presets.traq.v1, { origin: "" });
+  const parser = runtime.createParser(presets.traq.v1);
+  const extractor = runtime.createExtractor({ origin: "" });
+  const process = (source) => extractor.extract(parser.parse(source));
   const embed = (source) =>
     embedReferences(
       source,
-      processor.process(source).embedding,
+      process(source).embedding,
       (kind, name) => identities[kind]?.[name],
     );
 
@@ -69,11 +71,11 @@ test("embedding and restoration use Rust AST ranges without reparsing source tex
     assert.equal(embed("日本語😀 **@a**"), `日本語😀 **${reference}**`);
 
     const escaped = embed('@a"b');
-    assert.equal(processor.process(escaped).embedding.unembeddedText, '@a"b');
+    assert.equal(process(escaped).embedding.unembeddedText, '@a"b');
 
     const linkedReference = "[label " + reference + "](https://example.com)";
     assert.equal(
-      processor.process(linkedReference).embedding.unembeddedText,
+      process(linkedReference).embedding.unembeddedText,
       "[label @a](https://example.com)",
     );
 
@@ -82,61 +84,48 @@ test("embedding and restoration use Rust AST ranges without reparsing source tex
       "$$\n" + reference + "\n$$",
     ]) {
       assert.equal(
-        processor.process(protectedSource).embedding.unembeddedText,
+        process(protectedSource).embedding.unembeddedText,
         protectedSource,
       );
     }
 
     const source = `日本語😀 ${reference} \`${reference}\` !!${reference}!!`;
-    const output = processor.process(source);
+    const output = process(source);
     assert.equal(
       output.embedding.unembeddedText,
       `日本語😀 @a \`${reference}\` !!@a!!`,
     );
     assert.equal(mentionsUser(output.references, userId, []), true);
     assert.equal(
-      mentionsUser(
-        processor.process(`\`${reference}\``).references,
-        userId,
-        [],
-      ),
+      mentionsUser(process(`\`${reference}\``).references, userId, []),
       false,
     );
 
     const groupReference =
       "!" + JSON.stringify({ type: "group", raw: "@group", id: groupId });
     assert.equal(
-      mentionsUser(processor.process(groupReference).references, userId, [
-        groupId,
-      ]),
+      mentionsUser(process(groupReference).references, userId, [groupId]),
       true,
     );
     assert.equal(
-      mentionsUser(processor.process(groupReference).references, userId, []),
+      mentionsUser(process(groupReference).references, userId, []),
       false,
     );
     assert.equal(
-      mentionsUser(processor.process(reference).references, groupId, []),
+      mentionsUser(process(reference).references, groupId, []),
       false,
     );
     assert.equal(
-      mentionsUser(processor.process("!{invalid:json}").references, userId, [
-        groupId,
-      ]),
+      mentionsUser(process("!{invalid:json}").references, userId, [groupId]),
       false,
     );
     assert.equal(
-      mentionsUser(processor.process("").references, userId, [groupId]),
+      mentionsUser(process("").references, userId, [groupId]),
       false,
     );
 
     assert.throws(
-      () =>
-        embedReferences(
-          "different",
-          processor.process("@a").embedding,
-          () => userId,
-        ),
+      () => embedReferences("different", process("@a").embedding, () => userId),
       /does not match source/,
     );
   } finally {

@@ -1,9 +1,10 @@
 //! A Rust-owned parser with a small, language-neutral host ABI.
 mod buffers;
 mod contract;
+mod extraction;
 mod grammar;
 mod limits;
-mod processing;
+mod rendering;
 #[macro_use]
 mod node_types;
 mod nodes;

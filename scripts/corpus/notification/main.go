@@ -82,7 +82,9 @@ func main() {
 	runtime, err := markdown.NewRuntime(context.Background(), wasm)
 	must(err)
 	defer runtime.Close(context.Background())
-	processor, err := runtime.NewProcessor(context.Background(), markdown.PresetTraQV1, markdown.ProcessorOptions{Origin: conf.Origin})
+	parser, err := runtime.NewParser(context.Background(), markdown.PresetTraQV1)
+	must(err)
+	renderer, err := runtime.NewPlainTextRenderer(context.Background(), markdown.RendererOptions{Origin: conf.Origin})
 	must(err)
 	initMs := float64(time.Since(initStart).Nanoseconds()) / 1e6
 	input, err := os.Open(*corpus)
@@ -98,11 +100,11 @@ func main() {
 	encoder.SetEscapeHTML(false)
 	old := func(s string) (string, error) { return before.Parse(s).NotificationText(), nil }
 	current := func(s string) (string, error) {
-		r, e := processor.Process(context.Background(), s)
+		doc, e := parser.Parse(context.Background(), s)
 		if e != nil {
 			return "", e
 		}
-		return r.NotificationText, nil
+		return renderer.Render(context.Background(), doc)
 	}
 	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 65536), 16<<20)
@@ -158,7 +160,7 @@ func main() {
 	}
 	must(scanner.Err())
 	must(writer.Flush())
-	report := map[string]any{"messages": count, "differences": different, "beforeErrors": oldErrors, "afterErrors": newErrors, "before": summarize(oldTimes), "after": summarize(newTimes), "afterInitializationMs": initMs, "wallSeconds": time.Since(started).Seconds(), "timed": "Parse().NotificationText() / Rust Processor.Process().NotificationText; 200 warmups; alternating order; I/O excluded"}
+	report := map[string]any{"messages": count, "differences": different, "beforeErrors": oldErrors, "afterErrors": newErrors, "before": summarize(oldTimes), "after": summarize(newTimes), "afterInitializationMs": initMs, "wallSeconds": time.Since(started).Seconds(), "timed": "Parse().NotificationText() / Rust Parser.Parse() + PlainTextRenderer.Render(document); 200 warmups; alternating order; I/O excluded"}
 	data, err = json.MarshalIndent(report, "", "  ")
 	must(err)
 	must(os.WriteFile(filepath.Join(*out, "traq-summary.json"), data, 0600))

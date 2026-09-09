@@ -32,7 +32,6 @@ Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache res
 | --- | --- |
 | crates/grammar | traQ grammar presets and the distribution catalog |
 | crates/processing | traQ notification and extraction presets |
-| crates/processor | Parse-once composition returning notification, message text, references and attachments |
 | crates/wasm | Wasm ABI, distribution catalog, registered node contract list |
 | `typescript/index.ts` | TypeScript Wasm transport and lifecycle |
 | `go/parser.go` | traQ preset and artifact selection over core Go runtime |
@@ -66,4 +65,4 @@ Pass the file with `cargo --config /absolute/path/to/local.toml ...`; use equiva
 
 Fixtures contain no production messages or credentials. Their provenance and update policy are documented in [tests/fixtures](tests/fixtures/README.md).
 
-`crates/processor` owns the distribution's processing presets. Processing contract types are exported alongside AST contracts, including referenced objects and arrays. Its normal dependency tree must not include `markdown-codec`; notification rendering and extraction borrow the native AST. The notification corpus has 787 frozen expectations, exercised by native Rust, Go/Wasm and TypeScript/Wasm. Package consumers and all three examples also exercise the processing API.
+`crates/processing` owns the distribution's AST consumers and their presets. Processing contract types are exported alongside AST contracts, including referenced objects and arrays. Its normal dependency tree must not include `markdown-codec`; notification rendering and extraction borrow the native AST. The notification corpus has 787 frozen expectations, exercised by native Rust and Go/Wasm. TypeScript/Wasm tests cover AST extraction and TypeScript tests cover HTML rendering. Package consumers and all three examples also exercise the processing API.

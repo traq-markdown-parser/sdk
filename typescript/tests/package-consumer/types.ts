@@ -1,4 +1,4 @@
-import { type ProcessOutput } from "@traq-markdown-parser/traq";
+import { type Extraction } from "@traq-markdown-parser/traq";
 import {
   createRuntime,
   presets,
@@ -26,13 +26,12 @@ if (isKnownNode(unknownNode) && unknownNode.kind === names.Reference) {
 }
 declare const storedGrammarVersion: string;
 runtime.createParser(storedGrammarVersion);
-runtime.createProcessor(storedGrammarVersion, { origin: "" });
-const processor = runtime.createProcessor(presets.traq.v1, { origin: "" });
-const output: ProcessOutput = processor.process("hello");
+const extractor = runtime.createExtractor({ origin: "" });
+const output: Extraction = extractor.extract(document);
 const mentions: string[] = output.references.mentions;
 void mentions;
-// @ts-expect-error Processor has no host AST parsing API
-processor.parse("x");
+// @ts-expect-error Extractor has no host AST parsing API
+extractor.parse("x");
 // @ts-expect-error Options are generated from Rust
-runtime.createProcessor(presets.traq.v1, { origin: 4 });
+runtime.createExtractor({ origin: 4 });
 runtime.dispose();

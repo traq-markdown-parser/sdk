@@ -2,7 +2,6 @@
 members = [
     "crates/grammar",
     "crates/processing",
-    "crates/processor",
     "crates/wasm",
     "examples/rust",
 ]

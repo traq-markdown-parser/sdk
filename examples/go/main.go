@@ -45,16 +45,15 @@ func run(path string) error {
 	}
 	fmt.Println(string(raw))
 
-	processor, err := runtime.NewProcessor(
+	extractor, err := runtime.NewExtractor(
 		ctx,
-		markdown.PresetTraQV1,
-		markdown.ProcessorOptions{Origin: "https://q.example.test"},
+		markdown.ExtractorOptions{Origin: "https://q.example.test"},
 	)
 	if err != nil {
 		return err
 	}
-	defer processor.Close(ctx)
-	result, err := processor.Process(ctx, "**hello** !!secret!!")
+	defer extractor.Close(ctx)
+	result, err := extractor.Extract(ctx, document)
 	if err != nil {
 		return err
 	}
@@ -63,5 +62,15 @@ func run(path string) error {
 		return err
 	}
 	fmt.Println(string(raw))
+	renderer, err := runtime.NewPlainTextRenderer(ctx, markdown.RendererOptions{Origin: "https://q.example.test"})
+	if err != nil {
+		return err
+	}
+	defer renderer.Close(ctx)
+	text, err := renderer.Render(ctx, document)
+	if err != nil {
+		return err
+	}
+	fmt.Println(text)
 	return nil
 }

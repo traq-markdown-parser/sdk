@@ -366,7 +366,7 @@ for (const text of [
     " ms、traQ Rust " +
     f(meta.traq.afterInitializationMs) +
     " ms。モジュール読込は除きます。",
-  "S-UI は同一の固定 Store を使用。traQ は master の Parse とRust Processor.process が返す通知テキストを比較。参考値です。",
+  "S-UI は同一の固定 Store を使用。traQ は master の Parse と Rust PlainTextRenderer が返す通知テキストを比較。参考値です。",
 ]) {
   const p = document.createElement("p");
   p.textContent = text;
@@ -381,7 +381,7 @@ el("footer").textContent =
   meta.revisions.traqMaster.slice(0, 10) +
   " · after: renderer " +
   meta.revisions.renderer.slice(0, 10) +
-  " / processor " +
+  " / SDK " +
   meta.revisions.processor.slice(0, 10) +
   " · 外部画像はプレースホルダー表示。リンク・スクリプトは実行しません。";
 show().catch(() => {

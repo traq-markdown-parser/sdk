@@ -16,6 +16,19 @@ pub struct Buffers {
 thread_local! { pub static IO: RefCell<Buffers> = RefCell::default(); }
 
 impl Buffers {
+    pub fn document(&self) -> Result<markdown_ast::Document, String> {
+        let source = self.source().map_err(|error| error.to_string())?;
+        crate::nodes::codec()
+            .decode_with_limits(
+                source.as_bytes(),
+                markdown_codec::DecodeLimits {
+                    json_bytes: MAX_INPUT,
+                    ..Default::default()
+                },
+            )
+            .map_err(|error| error.to_string())
+    }
+
     pub fn reply_document(&mut self, result: &Result<markdown_ast::Document, ParseError>) {
         let result = match result {
             Ok(document) => self.encode_document(document),

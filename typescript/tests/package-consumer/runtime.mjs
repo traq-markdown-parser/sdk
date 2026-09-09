@@ -11,8 +11,19 @@ const parser = runtime.createParser(presets.traq.v1);
 assert.equal(createHash("sha256").update(bytes).digest("hex"), process.argv[2]);
 try {
   assert.equal(parser.parseInline(":stamp:").children[0].kind, names.Stamp);
-  const processor = runtime.createProcessor(presets.traq.v1, {origin:""});
-  assert.deepEqual(processor.process("**hello**"), {notificationText:"hello",plainText:"**hello**",embedding:{candidates:[],unembeddedText:"**hello**"},attachments:[],citations:[],references:{mentions:[],groupMentions:[],channelLinks:[],embeddings:[]}});
+  const extractor = runtime.createExtractor({ origin: "" });
+  assert.deepEqual(extractor.extract(parser.parse("**hello**")), {
+    messageText: "**hello**",
+    embedding: { candidates: [], unembeddedText: "**hello**" },
+    attachments: [],
+    citations: [],
+    references: {
+      mentions: [],
+      groupMentions: [],
+      channelLinks: [],
+      embeddings: [],
+    },
+  });
 } finally {
   runtime.dispose();
 }

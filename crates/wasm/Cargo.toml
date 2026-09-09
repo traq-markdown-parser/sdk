@@ -17,7 +17,7 @@ contracts = [
     "markdown-commonmark-contracts/contracts",
     "markdown-generic-contracts/contracts",
     "markdown-trap-contracts/contracts",
-    "traq-markdown-processor/contracts",
+    "traq-markdown-processing/contracts",
 ]
 
 [[bin]]
@@ -25,7 +25,7 @@ name = "export-node-contracts"
 required-features = ["contracts"]
 
 [dependencies]
-traq-markdown-processor = { path = "../processor" }
+traq-markdown-processing = { path = "../processing" }
 markdown-parser = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }
 traq-markdown-grammar = { path = "../grammar" }
 markdown-codec = { git = "https://github.com/traq-markdown-parser/core.git", rev = "1ccba0a7a63f7128873b4490e8f0b1c5b8714099", version = "0.1.0" }

@@ -527,7 +527,7 @@ name = "traq-markdown-example"
 version = "0.1.0"
 dependencies = [
  "traq-markdown-grammar",
- "traq-markdown-processor",
+ "traq-markdown-processing",
 ]
 
 [[package]]
@@ -564,20 +564,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "traq-markdown-processor"
-version = "0.1.0"
-dependencies = [
- "markdown-extractor",
- "markdown-renderer",
- "schemars",
- "serde",
- "serde_json",
- "traq-markdown-grammar",
- "traq-markdown-processing",
- "ts-rs",
-]
-
-[[package]]
 name = "traq-markdown-wasm"
 version = "0.1.0"
 dependencies = [
@@ -592,7 +578,7 @@ dependencies = [
  "serde",
  "serde_json",
  "traq-markdown-grammar",
- "traq-markdown-processor",
+ "traq-markdown-processing",
  "ts-rs",
 ]
 

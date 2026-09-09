@@ -43,7 +43,7 @@ export async function processingFiles(schemas, input) {
     }
   }
 
-  for (const name of ["ProcessorOptions", "ProcessOutput"]) {
+  for (const name of Object.keys(schemas)) {
     await declaration(name);
     const schema = schemas[name];
     addGo(schema);

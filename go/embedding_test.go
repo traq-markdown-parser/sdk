@@ -20,7 +20,7 @@ func TestEmbeddingFixtures(t *testing.T) {
 	}
 	defer runtime.Close(ctx)
 
-	processor, err := runtime.NewProcessor(ctx, PresetTraQV1, ProcessorOptions{})
+	extractor, err := runtime.NewExtractor(ctx, ExtractorOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,8 +56,16 @@ func TestEmbeddingFixtures(t *testing.T) {
 		return id, ok
 	}
 
+	parser, err := runtime.NewParser(ctx, PresetTraQV1)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, fixture := range fixtures {
-		output, err := processor.Process(ctx, fixture[0])
+		document, err := parser.Parse(ctx, fixture[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		output, err := extractor.Extract(ctx, document)
 		if err != nil {
 			t.Fatal(err)
 		}
