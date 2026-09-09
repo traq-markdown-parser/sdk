@@ -10,6 +10,9 @@ export type {
   ProcessOutput,
   References,
   EmbeddedInfo,
+  EmbeddingPlan,
+  EmbeddingCandidate,
+  LookupKind,
 } from "./generated/processing.js";
 import { buildId, inputBytes } from "./generated/artifact.js";
 import type { Document } from "./generated/nodes.js";
@@ -161,3 +164,5 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
     return instance;
   }
 }
+
+export { embedReferences, mentionsUser } from "./embedding.js";

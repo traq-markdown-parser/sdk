@@ -11,7 +11,7 @@ import { renderer } from "@traq-markdown-parser/core/renderer";
 import { prepareMessage } from "./embeddings.js";
 import { configurePreview } from "./preview.js";
 import { math } from "@traq-markdown-parser/commonmark/generic/math";
-export { embeddingFromUrl } from "./embeddings.js";
+export { embeddingFromUrl, endsWithEmbedding } from "./embeddings.js";
 export type { Embedding } from "./embeddings.js";
 import imageDomains from "./image-domains.js";
 

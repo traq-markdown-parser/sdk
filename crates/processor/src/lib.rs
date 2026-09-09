@@ -32,6 +32,7 @@ pub struct ProcessOutput {
     pub attachments: Vec<String>,
     pub citations: Vec<String>,
     pub references: References,
+    pub embedding: v1::embedding::EmbeddingPlan,
 }
 
 /// Owns the Rust implementations, without external document handles or AST copies.
@@ -75,6 +76,7 @@ impl Processor {
             attachments: message.attachments,
             citations: message.citations,
             references,
+            embedding: v1::embedding::plan(&document).map_err(str::to_owned)?,
         })
     }
 }

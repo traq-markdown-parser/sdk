@@ -25,8 +25,10 @@ export async function processingFiles(schemas, input) {
     types.set(
       name,
       source
+        .replace(/\r\n/g, "\n")
         .replace(/^\/\/[^\n]*\n/gm, "")
         .replace(/^import type .*;\r?\n/gm, "")
+        .replace(/[ \t]+$/gm, "")
         .trim(),
     );
     for (const match of source.matchAll(/from ["']\.\/([^"']+)\.js["']/g))

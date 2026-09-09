@@ -556,8 +556,11 @@ dependencies = [
  "markdown-trap-contracts",
  "markdown-trap-extraction",
  "markdown-trap-text",
+ "schemars",
+ "serde",
  "serde_json",
  "traq-markdown-grammar",
+ "ts-rs",
 ]
 
 [[package]]

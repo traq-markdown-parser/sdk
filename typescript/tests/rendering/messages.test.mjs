@@ -2,7 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   messageRenderer,
-  embeddingFromUrl
+  embeddingFromUrl,
+  endsWithEmbedding
 } from '@traq-markdown-parser/traq/renderer/v1'
 import { parser, commonParser } from './setup.mjs'
 
@@ -152,4 +153,12 @@ test('preview renders images as links and restricts math size commands', t => {
     /katex-block|katex-display/
   )
   assert.match(view.render(parser.parse('$$x$$')).renderedText, /katex-block/)
+})
+
+test('attachment spacing checks the complete AST instead of its final source line', () => {
+  assert.equal(endsWithEmbedding(parser.parse('本文\n' + file), origin), true)
+  assert.equal(endsWithEmbedding(parser.parse('本文 ' + file), origin), false)
+  assert.equal(endsWithEmbedding(parser.parse('~~~\n' + file), origin), false)
+  assert.equal(endsWithEmbedding(parser.parse('!!' + file + '!!'), origin), false)
+  assert.equal(endsWithEmbedding(parser.parse('[' + file + '](' + file + ')'), origin), false)
 })

@@ -27,6 +27,7 @@ test("Rust processing preserves all 787 notification expectations", async (t) =>
     assert.deepEqual(Object.keys(output).sort(), [
       "attachments",
       "citations",
+      "embedding",
       "notificationText",
       "plainText",
       "references",

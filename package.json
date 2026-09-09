@@ -28,6 +28,8 @@
   "files": [
     "dist/index.js",
     "dist/index.d.ts",
+    "dist/embedding.js",
+    "dist/embedding.d.ts",
     "dist/generated",
     "dist/parser.wasm",
     "dist/contract.json",

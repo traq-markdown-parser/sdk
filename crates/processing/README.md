@@ -35,3 +35,7 @@ spoiler 内も対象です。コード内は parser が参照ノードを生成�
 
 JSON 設定や Wasm のリソース管理は SDK 接続層の責務です。
 `references.embeddings` は認識した参照・埋め込みの `raw` / `type` / `id` を AST の出現順に返します。Bot イベントはこの結果を再利用でき、ID の UUID 検証前の文字列も保持されます。
+
+埋め込みの生成・復元は `embedding::plan(&document)` が担当します。Rust の AST で認識された通常テキストだけを名前解決候補にし、コード・数式・リンク・画像・既存の埋め込みに新しい参照を作りません。エスケープされた記号と文字参照も保持します。ユーザー、グループ、ユーザー名の ASCII 接頭辞の順に解決を試み、チャンネル名も同じ計画に含めます。
+
+候補の位置は元のソースに対する UTF-8 byte offset です。Go の `EmbedReferences` / TypeScript の `embedReferences` に解析結果の `embedding` とアプリの名前解決関数を渡すと、解決できた範囲だけを JSON 埋め込みへ置換します。その他の Markdown 記法と空白は保ちます。復元結果は `embedding.unembeddedText`、メンション検知は解析済み `references` に対する `mentionsUser` を利用できます。DB・store・送信・クリップボード操作はアプリ側の責務です。

@@ -170,3 +170,34 @@ export function prepareMessage(
     embeddings: state.embeddings,
   };
 }
+
+/** Whether the final paragraph ends with an embedding on a line of its own. */
+export function endsWithEmbedding(document: Document, origin: string): boolean {
+  const blocks = document.children.filter(
+    (node) => node.kind !== trap.BlankLine,
+  );
+  const paragraph = blocks.at(-1);
+
+  if (paragraph?.kind !== names.Paragraph) {
+    return false;
+  }
+
+  const children = paragraph.children ?? [];
+  const last = children.at(-1);
+  const previous = children.at(-2);
+
+  if (
+    !last ||
+    !isKnownNode(last) ||
+    last.kind !== names.Link ||
+    last.data.form !== "linkify"
+  ) {
+    return false;
+  }
+
+  if (previous && previous.kind !== names.Softbreak) {
+    return false;
+  }
+
+  return embeddingFromUrl(last.data.destination, origin) !== undefined;
+}
