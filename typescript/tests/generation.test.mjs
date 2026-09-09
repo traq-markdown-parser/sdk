@@ -4,6 +4,7 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { goNodes } from '../../scripts/contracts/go.mjs';
+import { nodeFiles } from '@traq-markdown-parser/core/codegen/nodes';
 import { typescriptFiles } from '../../scripts/contracts/typescript.mjs';
 import { presetFiles } from '../../scripts/contracts/presets.mjs';
 
@@ -18,7 +19,7 @@ test('new Rust-exported payloads and presets generate both host APIs', async () 
     const key = 'custom::BadgeData';
 
     const generated = await typescriptFiles({nodes:{[key]:{schema,group:'custom'}}},directory);
-    assert.match(generated.get('typescript/generated/custom.ts'), /kind: "custom::BadgeData"; data: BadgeData/);
+    assert.match((await nodeFiles({nodes:{[key]:{schema,group:'custom'}}},directory)).get('custom.ts'), /kind: "custom::BadgeData"; data: BadgeData/);
     assert.match(generated.get('typescript/generated/nodes.ts'), /custom.NodeKind/);
     const go = goNodes([[key,schema]]);
     assert.match(go, /Label string/);

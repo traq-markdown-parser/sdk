@@ -7,13 +7,7 @@
     "declaration": true,
     "rootDir": ".",
     "outDir": "../dist",
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "index.ts",
-    "validation.ts",
-    "generated/**/*.ts"
-  ]
+  "include": ["index.ts", "generated/**/*.ts", "renderer/**/*.ts"]
 }

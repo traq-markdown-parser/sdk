@@ -6,9 +6,10 @@
   },
   "include": [
     "index.ts",
-    "validation.ts",
     "generated/**/*.ts",
     "tests/package-consumer/*.ts",
-    "../examples/typescript/*.mts"
+    "../examples/typescript/*.mts",
+    "renderer/**/*.ts",
+    "tests/rendering/types.ts"
   ]
 }

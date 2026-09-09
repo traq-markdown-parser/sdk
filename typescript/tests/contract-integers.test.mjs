@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { javascript } from "../../scripts/contracts/javascript.mjs";
+import { javascript } from "@traq-markdown-parser/core/codegen/javascript";
 import { goPayload } from "../../scripts/contracts/go.mjs";
-import { shape } from "../../scripts/contracts/schema.mjs";
+import { shape } from "@traq-markdown-parser/core/codegen/schema";
 import ts from "typescript";
 
 test("generated numeric payload validators retain Rust integer bounds", async () => {
@@ -19,7 +19,7 @@ test("generated numeric payload validators retain Rust integer bounds", async ()
     };
     const generated = javascript(
       [["example::Numeric", schema]],
-      new URL("../../dist/validation.js", import.meta.url).href,
+      import.meta.resolve("@traq-markdown-parser/core/validation"),
     );
     const compiled = ts.transpileModule(generated, {
       compilerOptions: {

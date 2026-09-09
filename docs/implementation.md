@@ -68,7 +68,7 @@ Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小
 
 ## 描画と保存
 
-[traq-markdown-it](https://github.com/traPtitech/traq-markdown-it) は受け取った Document から HTML を作ります。レンダラーの Plugin 宣言はそのパッケージが所有します。文法を構成する Rust の Plugin とは別の API です。
+core の `/renderer` は受け取った Document から HTML を作ります。レンダラーの Plugin 宣言・登録・合成も core が所有します。構文別の handler は commonmark と trap-extension、traQ の構成と preview は traq の `/renderer` が所有します。文法を構成する Rust の Plugin とは別の API です。
 
 通知・参照抽出のネイティブ Rust API は [processing](https://github.com/traq-markdown-parser/traq/tree/main/crates/processing) にあります。保存済みメッセージの文法版は利用側で管理し、原文を対応するプリセットで再解析します。永続 AST の互換層は設けません。
 

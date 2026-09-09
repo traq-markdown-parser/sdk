@@ -32,9 +32,9 @@ npm run build
 npm run examples
 ```
 
-他のリポジトリの checkout は不要です。Cargo が固定した Git revision を取得します。Wasm・JavaScript・型定義は `dist/` に出力します。Rust から生成する TypeScript / Go のソースと、対応する Rust ビルド ID はソース管理します。バイナリと SDK は同じソース・固定依存から生成した組を配布してください。
+Rust の依存は Cargo が固定した Git revision を取得します。TypeScript のローカルビルドでは、同じ親ディレクトリに core・commonmark・trap-extension を置き、依存順に `npm ci` と `npm run build` を実行しておきます。Wasm・JavaScript・型定義は `dist/` に出力します。Rust から生成する TypeScript / Go のソースと、対応する Rust ビルド ID はソース管理します。バイナリと SDK は同じソース・固定依存から生成した組を配布してください。
 
-まだレジストリへ公開していません。TypeScript は `npm pack` で作ったアーカイブを利用できます。
+まだレジストリへ公開していません。TypeScript は4パッケージの `npm pack` アーカイブを利用できます。
 
 ## TypeScript
 
@@ -53,7 +53,7 @@ try {
 
 `wasmBytes` は `Uint8Array` です。Node.js は `@traq-markdown-parser/traq/parser.wasm` を `readFile` で読み、ブラウザーは `new Uint8Array(await response.arrayBuffer())` を渡します。Runtime と Parser は再利用できます。同じ Runtime から異なるプリセットの Parser も作成できます。
 
-ノード型は判別可能な union です。文法別の payload 型と任意利用の guard は `/commonmark/nodes`・`/generic/nodes`・`/trap/nodes`、全体の一覧は `/nodes` から利用できます。
+ノード型は判別可能な union です。文法別の payload 型と任意利用の guard は `@traq-markdown-parser/commonmark/nodes`・`@traq-markdown-parser/commonmark/generic/nodes`・`@traq-markdown-parser/trap-extension/nodes`、配布物全体の一覧は `@traq-markdown-parser/traq/nodes` から利用できます。
 
 ## Go
 
@@ -76,9 +76,9 @@ document, err := parser.Parse(ctx, "**hello** :stamp:")
 
 TypeScript の `presets.commonmark` / `presets.traq.v1`、Go の `PresetCommonMark` / `PresetTraQV1` は Rust が公開するプリセットから生成します。独自の文法は Rust で組み立て、配布層からプリセットとして公開して再ビルドします。ホスト API はプリセットの選択、解析、解放に絞っています。
 
-手書きの実装は TypeScript の `index.ts` と任意の payload guard 用の `validation.ts`、Go の `parser.go` です。文法ビルダー、Plugin / Rule のミラー、文法ハンドル、worker pool は持ちません。
+Wasm のホスト実装は TypeScript の `index.ts` と Go の `parser.go` です。共通 AST 型と payload guard の検証部品は core、構文の生成型はそれぞれのリポジトリが所有します。文法ビルダー、Plugin / Rule のミラー、文法ハンドル、worker pool は持ちません。
 
-HTML / CSS は [traq-markdown-it](https://github.com/traPtitech/traq-markdown-it) が担当します。
+HTML 描画の共通基盤は core、構文別の描画は commonmark と trap-extension が担当します。traQ の描画構成・inline preview・CSS はこのリポジトリの `typescript/renderer` が所有します。
 
 [API と実装](docs/implementation.md)、[実行例](examples/README.md)、[開発と検証](CONTRIBUTING.md) を参照してください。
 
@@ -113,3 +113,36 @@ result, err := processor.Process(ctx, "**hello** !!secret!!")
 Parser と Processor は同じ Runtime のコンパイル結果を共有し、独立した instance と設定を持ちます。Processor のライフサイクルと Go の直列化・キャンセル規則は Parser と同じです。プリセット・設定・結果の型は Rust から生成します。ネイティブ Rust では `traq-markdown-processor` crate の `Processor` を使います。
 
 通知は spoiler をマスクし、空白を正規化した一行のテキストです。参照はユーザー・グループ・チャンネルの UUID を種類別に返し、文書順・重複・spoiler 内の参照を保持します。コード内の文字列は参照として抽出しません。`origin` は通知中の traQ 添付・引用 URL の表示判定用です。添付・引用 ID の抽出と Bot 用 PlainText はこの API の対象外で、アプリ側の方針として残ります。
+
+## TypeScript / HTML rendering
+
+TypeScript の実装は各リポジトリの責務に合わせて配置しています。
+
+| npm package | 責務 |
+| --- | --- |
+| `@traq-markdown-parser/core` | 共通 AST 型、HTML handler・Plugin・PresetBuilder、契約検証と生成の基盤 |
+| `@traq-markdown-parser/commonmark` | CommonMark・汎用拡張の生成ノード型と HTML 描画 |
+| `@traq-markdown-parser/trap-extension` | traP の生成ノード型・参照・スタンプ等の HTML 描画 |
+| `@traq-markdown-parser/traq` | Wasm / Go / TypeScript 配布、traQ の描画構成・preview・CSS |
+
+ローカル開発では4リポジトリを同じ親ディレクトリに置き、core → commonmark → trap-extension → traq の順に `npm install`・`npm run build` を実行します。npm パッケージはまだ未公開です。配布検証は traq の `npm run check:package` で4パッケージを pack し、独立した consumer で実行します。
+
+AST の共通形は core の `typescript/ast.ts` に一度だけ定義し、traq の生成 bindings はそれを構文の union で特殊化します。構文の payload は Rust を正として生成し、commonmark と trap-extension の `npm run generate:bindings` でそれぞれの契約 crate から再生成できます。
+
+HTML API は `/renderer` サブパスです。traQ は `@traq-markdown-parser/traq/renderer/v1` の `messageRenderer`、CSS は `@traq-markdown-parser/traq/index.css` を利用します。
+
+### HTML の利用例
+
+```ts
+import { createRuntime, presets } from "@traq-markdown-parser/traq";
+import { messageRenderer } from "@traq-markdown-parser/traq/renderer/v1";
+import "@traq-markdown-parser/traq/index.css";
+
+const runtime = await createRuntime(wasmBytes);
+const parser = runtime.createParser(presets.traq.v1);
+const view = messageRenderer({ origin: "https://q.example.test" });
+const { renderedText, embeddings } = view.render(parser.parse(source));
+runtime.dispose();
+```
+
+Wasm の起動は利用側が明示的に行います。`/renderer` を import しても Wasm runtime は読み込みません。描画のカスタマイズは `@traq-markdown-parser/core/renderer` の `Plugin`・`PresetBuilder` と、各構文の `/renderer` を利用します。

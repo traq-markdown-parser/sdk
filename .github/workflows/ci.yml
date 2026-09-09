@@ -4,20 +4,44 @@ permissions:
   contents: read
 jobs:
   check:
+    defaults:
+      run:
+        working-directory: traq
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          path: traq
+      - uses: actions/checkout@v6
+        with:
+          repository: traq-markdown-parser/core
+          path: core
+      - uses: actions/checkout@v6
+        with:
+          repository: traq-markdown-parser/commonmark
+          path: commonmark
+      - uses: actions/checkout@v6
+        with:
+          repository: traq-markdown-parser/trap-extension
+          path: trap-extension
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: traq/package-lock.json
       - uses: actions/setup-go@v6
         with:
-          go-version-file: go/go.mod
-          cache-dependency-path: go/go.sum
+          go-version-file: traq/go/go.mod
+          cache-dependency-path: traq/go/go.sum
+      - run: npm ci && npm run build
+        working-directory: core
+      - run: npm ci && npm run build
+        working-directory: commonmark
+      - run: npm ci && npm run build
+        working-directory: trap-extension
       - run: npm ci
       - run: npm run build
       - run: npm test

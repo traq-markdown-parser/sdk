@@ -1,4 +1,8 @@
-import { shape, typeName, quoted as q } from "./schema.mjs";
+import {
+  shape,
+  typeName,
+  quoted as q,
+} from "@traq-markdown-parser/core/codegen/schema";
 
 const fieldName = (name) =>
   name === "id"

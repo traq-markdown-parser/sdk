@@ -6,7 +6,7 @@ import {
   type Node,
   type Document,
 } from "@traq-markdown-parser/traq";
-import { names, type ReferenceData } from "@traq-markdown-parser/traq/trap/nodes";
+import { names, type ReferenceData } from "@traq-markdown-parser/trap-extension/nodes";
 const runtime = await createRuntime(new Uint8Array());
 const parser = runtime.createParser(presets.traq.v1);
 const document: Document = parser.parse("text");

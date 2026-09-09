@@ -4,6 +4,8 @@
 
 Use Node.js 24+, Go 1.25+, and rustup. The Rust toolchain and Wasm target are pinned in `rust-toolchain.toml`. Windows additionally needs the MSVC C++ build tools; WSL and Bash are not required.
 
+Keep core, commonmark, trap-extension and traq as sibling checkouts. Build their npm packages in that dependency order before running the traq checks.
+
 ```sh
 npm ci
 npm run build
@@ -20,7 +22,7 @@ cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
 `build` compiles Wasm, exports Rust contracts to `target/node-contracts`, generates TypeScript and Go sources, compiles TypeScript into JavaScript and declarations with `tsc`, and writes the artifact digest to `dist/contract.json`.
 
-`check:package` installs a packed npm archive into a fresh temporary consumer and checks its public declarations, AST parsing, and Wasm digest. It does not publish to a registry. The archive remains in `dist/`; the temporary consumer is removed afterwards.
+`check:package` packs all four npm packages into a fresh temporary consumer and checks public declarations, AST parsing, HTML, CSS, and the Wasm digest. The temporary directory and archives are removed afterwards.
 
 Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache results. Changes to Go concurrency also require `go -C go test -race ./...` with a supported C compiler installed.
 
