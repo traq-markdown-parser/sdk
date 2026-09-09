@@ -138,35 +138,61 @@ func (p *instance) call(ctx context.Context, operation, input string, args ...ui
 		return nil, fmt.Errorf("parser is closed")
 	}
 
+	if err := p.writeInput(ctx, input); err != nil {
+		return nil, err
+	}
+	length, err := p.run(ctx, operation, args...)
+	if err != nil {
+		return nil, err
+	}
+	output, err := p.readOutput(ctx, length)
+	if err != nil {
+		return nil, err
+	}
+	return decodeReply(output, operation)
+}
+
+func (p *instance) writeInput(ctx context.Context, input string) error {
 	if len(input) > inputBytes {
-		return nil, fmt.Errorf("Wasm input limit exceeded")
+		return fmt.Errorf("Wasm input limit exceeded")
 	}
 	pointer, err := p.module.ExportedFunction("input_ptr").Call(ctx, uint64(len(input)))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if pointer[0] == 0 {
-		return nil, fmt.Errorf("Wasm input limit exceeded")
+		return fmt.Errorf("Wasm input limit exceeded")
 	}
 	if !p.module.Memory().Write(uint32(pointer[0]), []byte(input)) {
-		return nil, fmt.Errorf("invalid Wasm input range")
+		return fmt.Errorf("invalid Wasm input range")
 	}
+	return nil
+}
 
-	length, err := p.module.ExportedFunction(operation).Call(ctx, args...)
+func (p *instance) run(ctx context.Context, operation string, args ...uint64) (uint64, error) {
+	result, err := p.module.ExportedFunction(operation).Call(ctx, args...)
 	if err != nil {
 		if ctx.Err() != nil {
-			return nil, ctx.Err()
+			return 0, ctx.Err()
 		}
-		return nil, err
+		return 0, err
 	}
-	pointer, err = p.module.ExportedFunction("output_ptr").Call(ctx)
+	return result[0], nil
+}
+
+func (p *instance) readOutput(ctx context.Context, length uint64) ([]byte, error) {
+	pointer, err := p.module.ExportedFunction("output_ptr").Call(ctx)
 	if err != nil {
 		return nil, err
 	}
-	output, ok := p.module.Memory().Read(uint32(pointer[0]), uint32(length[0]))
+	output, ok := p.module.Memory().Read(uint32(pointer[0]), uint32(length))
 	if !ok {
 		return nil, fmt.Errorf("invalid Wasm output range")
 	}
+	return output, nil
+}
+
+func decodeReply(output []byte, operation string) (json.RawMessage, error) {
 
 	var reply struct {
 		Document   json.RawMessage `json:"document"`
