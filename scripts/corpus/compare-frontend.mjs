@@ -26,7 +26,7 @@ const frontendPath = sdkPath;
 const { createRuntime, presets } = await import(
   pathToFileURL(sdkPath + "/dist/index.js")
 );
-const { messageRenderer } = await import(
+const { messageRenderers } = await import(
   pathToFileURL(frontendPath + "/dist/renderer/index.js")
 );
 const origin = values.origin;
@@ -49,18 +49,18 @@ const bytes = await readFile(sdkPath + "/dist/parser.wasm");
 start = performance.now();
 const runtime = await createRuntime(bytes),
   parser = runtime.createParser(presets.traq.v1),
-  view = messageRenderer({ origin, store, validateImage: () => false });
+  view = messageRenderers({ origin, store, validateImage: () => false });
 const afterInitializationMs = performance.now() - start;
 const profiles = [
   {
     mode: "render",
     before: (s) => baseline.render(s),
-    after: (s) => view.render(parser.parse(s)),
+    after: (s) => view.standard.render(parser.parse(s)),
   },
   {
     mode: "inline",
     before: (s) => baseline.renderInline(s),
-    after: (s) => view.renderInline(parser.parse(s)),
+    after: (s) => view.condensed.render(parser.parse(s)),
   },
 ];
 const timings = Object.fromEntries(

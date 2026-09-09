@@ -20,10 +20,10 @@ test('rendering returns HTML and exposes no parser or token adapter', () => {
     '<p><strong>bold</strong></p>\n'
   )
   assert.equal(
-    view.renderInline(parser.parseInline('**bold**')),
+    view.render(parser.parseInline('**bold**')),
     '<strong>bold</strong>'
   )
-  assert.deepEqual(Object.keys(view).sort(), ['render', 'renderInline'])
+  assert.deepEqual(Object.keys(view).sort(), ['render'])
   assert.equal(html.installParser, undefined)
   assert.equal(html.traQMarkdownIt, undefined)
 })
@@ -33,7 +33,7 @@ test('replacement preserves defaults and earlier snapshots', () => {
   const plugin = common.html.plugin()
   const builder = new html.PresetBuilder().add(plugin)
   const before = html.renderer(builder.build())
-  plugin.replace(common.nodes.Link, (node, ctx) => ctx.inline(node.children))
+  plugin.replace(common.nodes.Link, (node, ctx) => ctx.render(node.children))
   assert.throws(() => builder.remove(plugin), /Missing plugin/)
   const custom = html.renderer(build(plugin))
   assert.match(custom.render(document), /<strong>bold<\/strong>/)
@@ -95,12 +95,12 @@ test('custom HTML handlers receive escaped text helpers and rendered children', 
       '<b title="' +
       context.escape('"<&') +
       '">' +
-      context.inline(node.children) +
+      context.render(node.children) +
       '</b>'
   )
   const view = html.renderer(build(plugin))
   assert.equal(
-    view.renderInline(parser.parseInline('**<x>**')),
+    view.render(parser.parseInline('**<x>**')),
     '<b title="&quot;&lt;&amp;">&lt;x&gt;</b>'
   )
   plugin.replace(common.nodes.Strong, () => [])
@@ -133,7 +133,7 @@ test('fallback replacement keeps other extensions and does not require a store',
 
 test('empty presets escape source without implicitly enabling CommonMark', () => {
   const view = html.renderer(new html.PresetBuilder().build())
-  assert.equal(view.render(parser.parse('**bold**')), '<p>**bold**</p>\n')
+  assert.equal(view.render(parser.parse('**bold**')), '**bold**')
   const source = '<script>日本語</script>'
   const document = {
     source,
@@ -147,7 +147,7 @@ test('empty presets escape source without implicitly enabling CommonMark', () =>
   }
   assert.equal(
     view.render(document),
-    '<p>&lt;script&gt;日本語&lt;/script&gt;</p>\n'
+    '&lt;script&gt;日本語&lt;/script&gt;'
   )
 })
 
@@ -178,12 +178,12 @@ test('CommonMark owns link policy and rejects malformed known payloads', () => {
     /href=/
   )
   assert.doesNotMatch(
-    view.renderInline(parser.parseInline('[link](https://example.com)')),
+    view.render(parser.parseInline('[link](https://example.com)')),
     /href=/
   )
   const document = parser.parseInline('[label](https://example.com)')
   document.children[0].data.destination = 'javascript:alert(1)'
-  assert.equal(html.renderer(common.preset()).renderInline(document), 'label')
+  assert.equal(html.renderer(common.preset()).render(document), 'label')
   const heading = parser.parse('# title')
   assert.equal(heading.children[0].kind, commonNodes.names.Heading)
   heading.children[0].data.level = '1 onclick="alert(1)"'
@@ -200,7 +200,7 @@ test('direct HTML rendering escapes attributes, image text, and fence info', t =
     common.preset({ linkAttributes: { title: '"<&' } })
   )
   assert.equal(
-    view.renderInline(parser.parseInline('[x](/url)')),
+    view.render(parser.parseInline('[x](/url)')),
     '<a href="/url" title="&quot;&lt;&amp;">x</a>'
   )
   assert.throws(
@@ -208,7 +208,7 @@ test('direct HTML rendering escapes attributes, image text, and fence info', t =
     /Invalid HTML attribute/
   )
   assert.equal(
-    view.renderInline(parser.parseInline('![**bold** `code` &quot;](/image)')),
+    view.render(parser.parseInline('![**bold** `code` &quot;](/image)')),
     '<img src="/image" alt="bold code &quot;">'
   )
   assert.equal(
@@ -217,7 +217,7 @@ test('direct HTML rendering escapes attributes, image text, and fence info', t =
   )
   const extended = html.renderer(traq.html({ validateImage: () => true }))
   assert.equal(
-    extended.renderInline(parser.parseInline('![日本語](/image)')),
+    extended.render(parser.parseInline('![日本語](/image)')),
     '<img src="/image" alt="日本語">'
   )
 })

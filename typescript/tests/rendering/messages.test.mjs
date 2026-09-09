@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  messageRenderer,
+  messageRenderers,
   embeddingFromUrl,
   endsWithEmbedding
 } from '@traq-markdown-parser/traq/renderer'
@@ -13,26 +13,29 @@ const origin = 'https://q.example.test',
 
 const file = origin + '/files/' + fileId,
   quote = origin + '/messages/' + messageId
-const view = messageRenderer({ origin })
+const view = messageRenderers({ origin })
 
 test('message rendering extracts cards, trims trailing bare links, and keeps the AST reusable', () => {
   const source = '本文\n' + file + '\n' + quote,
     document = parser.parse(source),
     snapshot = structuredClone(document)
-  const normal = view.render(document),
-    preview = view.renderInline(document)
+  assert.deepEqual(Object.keys(view).sort(), ['condensed', 'standard'])
+  for (const renderer of Object.values(view))
+    assert.deepEqual(Object.keys(renderer), ['render'])
+  const normal = view.standard.render(document),
+    condensed = view.condensed.render(document)
   assert.equal(normal.renderedText, '<p>本文</p>\n')
-  assert.equal(preview.renderedText, '本文')
+  assert.equal(condensed.renderedText, '本文')
   assert.equal(normal.rawText, source)
   assert.deepEqual(normal.embeddings, [
     { type: 'file', id: fileId },
     { type: 'message', id: messageId }
   ])
-  assert.deepEqual(preview.embeddings, normal.embeddings)
+  assert.deepEqual(condensed.embeddings, normal.embeddings)
   assert.deepEqual(document, snapshot)
-  assert.equal(view.render(document).renderedText, normal.renderedText)
+  assert.equal(view.standard.render(document).renderedText, normal.renderedText)
   assert.equal(
-    view
+    view.standard
       .render(parser.parse(file + '\n\n' + quote))
       .renderedText.includes(file),
     true
@@ -51,7 +54,7 @@ test('card extraction respects Markdown context and preserves external URL candi
     '!!\n`' +
     quote +
     '`\nhttps://example.com\nhttps://example.com'
-  assert.deepEqual(view.render(parser.parse(source)).embeddings, [
+  assert.deepEqual(view.standard.render(parser.parse(source)).embeddings, [
     { type: 'file', id: fileId },
     { type: 'message', id: messageId },
     { type: 'url', url: 'https://example.com' },
@@ -62,7 +65,7 @@ test('card extraction respects Markdown context and preserves external URL candi
     '`' + file + '`',
     '```\n' + file + '\n```'
   ])
-    assert.deepEqual(view.render(parser.parse(source)).embeddings, [])
+    assert.deepEqual(view.standard.render(parser.parse(source)).embeddings, [])
   assert.equal(embeddingFromUrl(origin + '/channels/test', origin), undefined)
   assert.equal(embeddingFromUrl(origin + '/files/invalid', origin), undefined)
   assert.equal(embeddingFromUrl('javascript:alert(1)', origin), undefined)
@@ -77,17 +80,17 @@ test('card extraction respects Markdown context and preserves external URL candi
   )
 })
 
-test('preview labels retained card links without removing explicit labels from message content', () => {
+test('condensed labels retained card links without removing explicit labels from message content', () => {
   const document = parser.parse('[資料](' + file + ') ' + quote + ' 続き')
-  assert.match(view.render(document).renderedText, />資料<\/a>/)
-  const text = view.renderInline(document).renderedText
+  assert.match(view.standard.render(document).renderedText, />資料<\/a>/)
+  const text = view.condensed.render(document).renderedText
   assert.match(text, />\[\[添付ファイル\]\]<\/a>/)
   assert.match(text, />\[\[引用メッセージ\]\]<\/a> 続き/)
-  assert.equal(view.renderInline(parser.parse(file)).renderedText, '')
-  assert.match(view.render(parser.parse('<' + file + '>')).renderedText, /<a /)
+  assert.equal(view.condensed.render(parser.parse(file)).renderedText, '')
+  assert.match(view.standard.render(parser.parse('<' + file + '>')).renderedText, /<a /)
 })
 
-test('preview preserves explicit quote links and their labels', () => {
+test('condensed preserves explicit quote links and their labels', () => {
   for (const source of [
     '[AAA](' + quote + ')',
     '[**AAA**](' + quote + ')',
@@ -95,20 +98,20 @@ test('preview preserves explicit quote links and their labels', () => {
     '<' + quote + '>'
   ]) {
     const document = parser.parse(source),
-      result = view.renderInline(document)
+      result = view.condensed.render(document)
     assert.match(result.renderedText, /<a /)
     assert.doesNotMatch(result.renderedText, /\[\[引用メッセージ\]\]/)
     assert.equal(
       result.renderedText,
-      view.render(document).renderedText.trim().slice(3, -4)
+      view.standard.render(document).renderedText.trim().slice(3, -4)
     )
     assert.deepEqual(result.embeddings, [{ type: 'message', id: messageId }])
   }
 })
 
-test('traQ preview flattens full-document block structure and break nodes', () => {
+test('traQ condensed flattens full-document block structure and break nodes', () => {
   assert.equal(
-    view.renderInline({
+    view.condensed.render({
       source: '<unknown>',
       children: [{ kind: 'custom', span: { start: 0, end: 9 }, data: {} }]
     }).renderedText,
@@ -125,34 +128,34 @@ test('traQ preview flattens full-document block structure and break nodes', () =
     ['```\na\nb\n```', '<code>a\nb\n</code>']
   ])
     assert.equal(
-      view.renderInline(parser.parse(source)).renderedText,
+      view.condensed.render(parser.parse(source)).renderedText,
       expected,
       source
     )
-  assert.match(view.render(parser.parse('a\nb')).renderedText, /<br>/)
+  assert.match(view.standard.render(parser.parse('a\nb')).renderedText, /<br>/)
   assert.doesNotMatch(
-    view.renderInline(parser.parse('a\n\n\n\nb')).renderedText,
+    view.condensed.render(parser.parse('a\n\n\n\nb')).renderedText,
     /<br>/
   )
 })
 
-test('preview renders images as links and restricts math size commands', t => {
+test('condensed renders images as links and restricts math size commands', t => {
   const images = commonParser()
   t.after(() => images.dispose())
   assert.equal(
-    view.renderInline(images.parse('![alt](https://example.test/a.png)'))
+    view.condensed.render(images.parse('![alt](https://example.test/a.png)'))
       .renderedText,
     '<a href="https://example.test/a.png" data-is-image>alt</a>'
   )
   assert.doesNotMatch(
-    view.renderInline(parser.parse('$\\Huge x$')).renderedText,
+    view.condensed.render(parser.parse('$\\Huge x$')).renderedText,
     /size11|katex-display/
   )
   assert.doesNotMatch(
-    view.renderInline(parser.parse('$$x$$')).renderedText,
+    view.condensed.render(parser.parse('$$x$$')).renderedText,
     /katex-block|katex-display/
   )
-  assert.match(view.render(parser.parse('$$x$$')).renderedText, /katex-block/)
+  assert.match(view.standard.render(parser.parse('$$x$$')).renderedText, /katex-block/)
 })
 
 test('attachment spacing checks the complete AST instead of its final source line', () => {

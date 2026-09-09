@@ -18,9 +18,9 @@ import { validateLink as defaultPolicy } from "@traq-markdown-parser/commonmark/
 import type { Options } from "./index.js";
 
 const blocks = (nodes: Node[] | undefined, ctx: RenderContext) =>
-  (nodes ?? []).map((node) => ctx.inline([node])).join(" ");
+  (nodes ?? []).map((node) => ctx.render([node])).join(" ");
 
-function configureCommonPreview(common: Plugin, options: Options) {
+function configureCommonCondensed(common: Plugin, options: Options) {
   for (const kind of [names.Softbreak, names.Hardbreak])
     common.replace(
       kind,
@@ -29,7 +29,7 @@ function configureCommonPreview(common: Plugin, options: Options) {
 
   common.replace(
     names.Paragraph,
-    checked(names.Paragraph, isKnownNode, (n, ctx) => ctx.inline(n.children)),
+    checked(names.Paragraph, isKnownNode, (n, ctx) => ctx.render(n.children)),
   );
 
   common.replace(
@@ -37,7 +37,7 @@ function configureCommonPreview(common: Plugin, options: Options) {
     checked(
       names.Heading,
       isKnownNode,
-      (n, ctx) => "#".repeat(n.data.level) + " " + ctx.inline(n.children),
+      (n, ctx) => "#".repeat(n.data.level) + " " + ctx.render(n.children),
     ),
   );
 
@@ -111,7 +111,7 @@ function configureCommonPreview(common: Plugin, options: Options) {
   );
 }
 
-function configureGenericPreview(generic: Plugin) {
+function configureGenericCondensed(generic: Plugin) {
   generic.replace(
     genericNames.Table,
     checked(genericNames.Table, genericNode, (n, ctx) =>
@@ -126,7 +126,7 @@ function configureGenericPreview(generic: Plugin) {
                 if (!genericNode(cell) || cell.kind !== genericNames.Cell)
                   throw new TypeError("Invalid table cell");
 
-                return "| " + ctx.inline(cell.children);
+                return "| " + ctx.render(cell.children);
               })
               .join(" ") + " |"
           );
@@ -136,21 +136,21 @@ function configureGenericPreview(generic: Plugin) {
   );
 }
 
-function configureTrapPreview(trap: Plugin) {
+function configureTrapCondensed(trap: Plugin) {
   trap.replace(
     trapNames.BlankLine,
     checked(trapNames.BlankLine, trapNode, () => " "),
   );
 }
 
-/** A traQ message preview is a flattened document, not inline-only parsing. */
-export function configurePreview(
+/** A condensed traQ message is a flattened document, not inline-only parsing. */
+export function configureCondensed(
   common: Plugin,
   generic: Plugin,
   trap: Plugin,
   options: Options,
 ) {
-  configureCommonPreview(common, options);
-  configureGenericPreview(generic);
-  configureTrapPreview(trap);
+  configureCommonCondensed(common, options);
+  configureGenericCondensed(generic);
+  configureTrapCondensed(trap);
 }

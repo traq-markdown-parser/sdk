@@ -151,7 +151,7 @@ function replaceEmbeddingLabels(
 export function prepareMessage(
   document: Document,
   origin: string,
-  preview: boolean,
+  condensed: boolean,
 ) {
   const state: EmbeddingState = {
     links: new Map(),
@@ -161,7 +161,7 @@ export function prepareMessage(
   collectEmbeddings(document.children, origin, state, new Set());
 
   const children = trimTrailingEmbeddings(document.children, state.links);
-  const renderedChildren = preview
+  const renderedChildren = condensed
     ? replaceEmbeddingLabels(children, state.links)
     : children;
 

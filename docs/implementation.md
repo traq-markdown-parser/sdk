@@ -71,7 +71,7 @@ Wasm ABI 3 は input buffer、`configure`、`parse(mode)`、output buffer の小
 
 ## 描画と保存
 
-core の `/renderer` は受け取った Document から HTML を作ります。レンダラーの Plugin 宣言・登録・合成も core が所有します。構文別の handler は commonmark と trap-extension、traQ の構成と preview は traq の `/renderer` が所有します。文法を構成する Rust の Plugin とは別の API です。
+core の `/renderer` は受け取った Document から HTML を作ります。レンダラーの Plugin 宣言・登録・合成も core が所有します。構文別の handler は commonmark と trap-extension、traQ の構成と condensed 表示 は traq の `/renderer` が所有します。文法を構成する Rust の Plugin とは別の API です。
 
 通知・参照抽出のネイティブ Rust API は [processing](https://github.com/traq-markdown-parser/traq/tree/main/crates/processing) にあります。保存済みメッセージの文法版は利用側で管理し、原文を対応するプリセットで再解析します。永続 AST の互換層は設けません。
 
@@ -97,3 +97,5 @@ host renderer directly with the same Document type.
 AST JSON has the transport's 1 MiB bound; decoded documents retain the parser's
 64 KiB source, depth and node bounds. Go cancellation and disposal rules apply to
 all instances. Runtime disposal closes every parser, extractor and renderer.
+
+`messageRenderers(options)` は共通設定から `standard` と `condensed` を構築し、どちらも `render(document)` で呼び出します。condensed の表示差は handler と文書の結合処理で定義します。core の子ノード描画は `ctx.render(nodes)` に統一し、fallback はエスケープ済みの原文だけを返します。段落タグなどの構造は各ノードの handler が担当します。core に `renderInline` や block/inline の描画モードはありません。

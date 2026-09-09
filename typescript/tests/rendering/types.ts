@@ -19,11 +19,11 @@ const runtime = await createRuntime(new Uint8Array())
 const parser = runtime.createParser(presets.traq.v1)
 const view = renderer(rendering.html())
 const result: string = view.render(parser.parse('text'))
-const messageView = rendering.messageRenderer({ origin: 'https://q.example.test' })
-const messageHtml: string = messageView.render(
+const messageView = rendering.messageRenderers({ origin: 'https://q.example.test' })
+const messageHtml: string = messageView.standard.render(
   parser.parse('text')
 ).renderedText
-const previewHtml: string = messageView.renderInline(
+const condensedHtml: string = messageView.condensed.render(
   parser.parse('text')
 ).renderedText
 
@@ -32,7 +32,7 @@ const openResult: string = view.render(openDocument)
 const custom = plugin().replace(names.Link, (node, context) => {
   if (isKnownNode(node) && node.kind === names.Link) {
     const destination: string = node.data.destination
-    return context.escape(destination) + context.inline(node.children)
+    return context.escape(destination) + context.render(node.children)
   }
   return context.fallback(node)
 })
@@ -40,7 +40,7 @@ const builder = new PresetBuilder().add(custom)
 const declaration = Declaration.group('custom').new('annotation')
 builder.add(
   new Plugin(declaration).on('custom::annotation', (node, context) =>
-    context.blocks(node.children)
+    context.render(node.children)
   )
 )
 const store: Store = {
@@ -56,5 +56,18 @@ renderer({})
 // @ts-expect-error shared declarations are explicit objects
 new Plugin('name')
 declare const context: RenderContext
-const renderedChildren: string = context.inline([])
+const renderedChildren: string = context.render([])
 void [result, openResult, renderedChildren]
+
+// @ts-expect-error Choose a message presentation before rendering.
+messageView.render(parser.parse("text"))
+// @ts-expect-error Each message renderer exposes only render.
+messageView.condensed.renderInline(parser.parse("text"))
+
+// @ts-expect-error Core renderers also expose only render.
+view.renderInline(parser.parseInline("text"))
+
+// @ts-expect-error Child rendering has no inline mode.
+context.inline([])
+// @ts-expect-error Child rendering has no block mode.
+context.blocks([])

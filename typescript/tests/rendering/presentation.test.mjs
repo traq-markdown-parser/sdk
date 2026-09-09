@@ -25,7 +25,7 @@ test('traQ presentation combines tables, marks, spoilers, math, and highlighted 
     assert(html.includes(expected), expected)
   assert.match(view.render(parser.parse('one\ntwo')), /one<br>\ntwo/)
   assert.match(
-    view.renderInline(parser.parseInline('$\\invalidcommand$')),
+    view.render(parser.parseInline('$\\invalidcommand$')),
     /katex-error/
   )
 })
@@ -46,15 +46,15 @@ test('stamp stores are isolated and unrecognized effects preserve escaped source
   const first = make('https://first.example'),
     second = make('https://second.example')
   const document = parser.parseInline(':wave: :@alice: :0xff0000: :wave.spin:')
-  assert.match(first.renderInline(document), /first\.example\/stamp/)
-  assert.match(second.renderInline(document), /second\.example\/icon/)
-  assert.doesNotMatch(first.renderInline(document), /second\.example/)
-  assert.match(first.renderInline(document), /background-color: #ff0000/)
+  assert.match(first.render(document), /first\.example\/stamp/)
+  assert.match(second.render(document), /second\.example\/icon/)
+  assert.doesNotMatch(first.render(document), /second\.example/)
+  assert.match(first.render(document), /background-color: #ff0000/)
   assert.equal(
-    first.renderInline(parser.parseInline(':wave.unknown:')),
+    first.render(parser.parseInline(':wave.unknown:')),
     ':wave.unknown:'
   )
-  assert.equal(first.renderInline(parser.parseInline(':missing:')), ':missing:')
+  assert.equal(first.render(parser.parseInline(':missing:')), ':missing:')
   const unsafe = renderer(
     rendering.html({
       store: {
@@ -63,7 +63,7 @@ test('stamp stores are isolated and unrecognized effects preserve escaped source
       }
     })
   )
-  assert.equal(unsafe.renderInline(parser.parseInline(':wave:')), ':wave:')
+  assert.equal(unsafe.render(parser.parseInline(':wave:')), ':wave:')
 })
 
 test('reference highlighting and link/image policies belong to each renderer', t => {
@@ -82,31 +82,31 @@ test('reference highlighting and link/image policies belong to each renderer', t
   )
   const source =
     '!{"type":"user","id":"me","raw":"@me"} !{"type":"group","id":"g","raw":"@group"} !{"type":"channel","id":"c","raw":"#channel"}'
-  const html = view.renderInline(parser.parseInline(source))
+  const html = view.render(parser.parseInline(source))
   assert.match(html, /message-user-link-highlight/)
   assert.match(html, /message-group-link-highlight/)
   assert.match(html, /href="#channel-c"/)
   assert.doesNotMatch(
-    view.renderInline(
+    view.render(
       common.parseInline('![x](https://unlisted.example/x.png)')
     ),
     /<img/
   )
   assert.match(
-    view.renderInline(common.parseInline('![x](https://trap.jp/x.png)')),
+    view.render(common.parseInline('![x](https://trap.jp/x.png)')),
     /<img/
   )
   const custom = renderer(
     rendering.html({ validateImage: () => true, validateLink: () => false })
   )
   assert.match(
-    custom.renderInline(
+    custom.render(
       common.parseInline('![x](https://unlisted.example/x.png)')
     ),
     /<img/
   )
   assert.equal(
-    custom.renderInline(parser.parseInline('[x](https://example.com)')),
+    custom.render(parser.parseInline('[x](https://example.com)')),
     'x'
   )
 })

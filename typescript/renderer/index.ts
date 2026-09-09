@@ -9,7 +9,7 @@ import { createHighlightFunc } from "@traq-markdown-parser/commonmark/highlight"
 import type { Document } from "@traq-markdown-parser/core/renderer";
 import { renderer } from "@traq-markdown-parser/core/renderer";
 import { prepareMessage } from "./embeddings.js";
-import { configurePreview } from "./preview.js";
+import { configureCondensed } from "./condensed.js";
 import { math } from "@traq-markdown-parser/commonmark/generic/math";
 export { embeddingFromUrl, endsWithEmbedding } from "./embeddings.js";
 export type { Embedding } from "./embeddings.js";
@@ -28,7 +28,7 @@ const validateImage = (value: string) => {
   }
 };
 
-function previewOptions(options: Options) {
+function condensedOptions(options: Options) {
   const customMath = options.math;
 
   return {
@@ -49,7 +49,7 @@ function previewOptions(options: Options) {
   };
 }
 
-function build(options: Options = {}, preview = false) {
+function build(options: Options = {}, condensed = false) {
   const commonPlugin = common({
     breaks: true,
     highlight,
@@ -57,12 +57,12 @@ function build(options: Options = {}, preview = false) {
     linkAttributes: { target: "_blank", rel: "nofollow noopener noreferrer" },
     ...options,
   });
-  const genericPlugin = generic(preview ? previewOptions(options) : options);
+  const genericPlugin = generic(condensed ? condensedOptions(options) : options);
 
   const trapPlugin = trap(options);
 
-  if (preview)
-    configurePreview(commonPlugin, genericPlugin, trapPlugin, options);
+  if (condensed)
+    configureCondensed(commonPlugin, genericPlugin, trapPlugin, options);
 
   return new PresetBuilder()
     .add(commonPlugin)
@@ -75,33 +75,38 @@ export function html(options?: Options) {
   return build(options);
 }
 
-/** Render a full Rust-parsed document as message content or a one-line preview. */
-export function messageRenderer({
+/** Build standard and condensed message renderers from the same options. */
+export function messageRenderers({
   origin,
   ...options
 }: Options & { origin: string }) {
   const embeddingOrigin = new URL(origin).origin;
-  const full = renderer(build(options)),
-    preview = renderer(build(options, true));
 
-  function render(document: Document, inline: boolean) {
-    const prepared = prepareMessage(document, embeddingOrigin, inline);
-    const renderedText = inline
-      ? prepared.document.children
-          .map((node) =>
-            preview.renderInline({ ...prepared.document, children: [node] }),
-          )
-          .join(" ")
-      : full.render(prepared.document);
-    return {
-      rawText: document.source,
-      renderedText,
-      embeddings: prepared.embeddings,
-    };
+  function create(condensed: boolean) {
+    const view = renderer(build(options, condensed));
+
+    return Object.freeze({
+      render(document: Document) {
+        const prepared = prepareMessage(document, embeddingOrigin, condensed);
+        const renderedText = condensed
+          ? prepared.document.children
+              .map((node) =>
+                view.render({ ...prepared.document, children: [node] }),
+              )
+              .join(" ")
+          : view.render(prepared.document);
+
+        return {
+          rawText: document.source,
+          renderedText,
+          embeddings: prepared.embeddings,
+        };
+      },
+    });
   }
 
   return Object.freeze({
-    render: (document: Document) => render(document, false),
-    renderInline: (document: Document) => render(document, true),
+    standard: create(false),
+    condensed: create(true),
   });
 }

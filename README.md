@@ -117,7 +117,7 @@ TypeScript の `presets.commonmark` / `presets.traq.v1`、Go の `PresetCommonMa
 
 Wasm のホスト実装は TypeScript の `index.ts` と Go の `parser.go` です。共通 AST 型と payload guard の検証部品は core、構文の生成型はそれぞれのリポジトリが所有します。文法ビルダー、Plugin / Rule のミラー、文法ハンドル、worker pool は持ちません。
 
-HTML 描画の共通基盤は core、構文別の描画は commonmark と trap-extension が担当します。traQ の描画構成・inline preview・CSS はこのリポジトリの `typescript/renderer` が所有します。
+HTML 描画の共通基盤は core、構文別の描画は commonmark と trap-extension が担当します。traQ の描画構成・condensed 表示・CSS はこのリポジトリの `typescript/renderer` が所有します。
 
 [API と実装](docs/implementation.md)、[実行例](examples/README.md)、[開発と検証](CONTRIBUTING.md) を参照してください。
 
@@ -168,25 +168,27 @@ TypeScript の実装は各リポジトリの責務に合わせて配置してい
 | `@traq-markdown-parser/core` | 共通 AST 型、HTML handler・Plugin・PresetBuilder、契約検証と生成の基盤 |
 | `@traq-markdown-parser/commonmark` | CommonMark・汎用拡張の生成ノード型と HTML 描画 |
 | `@traq-markdown-parser/trap-extension` | traP の生成ノード型・参照・スタンプ等の HTML 描画 |
-| `@traq-markdown-parser/traq` | Wasm / Go / TypeScript 配布、traQ の描画構成・preview・CSS |
+| `@traq-markdown-parser/traq` | Wasm / Go / TypeScript 配布、traQ の描画構成・condensed 表示・CSS |
 
 ローカル開発では4リポジトリを同じ親ディレクトリに置き、core → commonmark → trap-extension → traq の順に `npm install`・`npm run build` を実行します。npm パッケージはまだ未公開です。配布検証は traq の `npm run check:package` で4パッケージを pack し、独立した consumer で実行します。
 
 AST の共通形は core の `typescript/ast.ts` に一度だけ定義し、traq の生成 bindings はそれを構文の union で特殊化します。構文の payload は Rust を正として生成し、commonmark と trap-extension の `npm run generate:bindings` でそれぞれの契約 crate から再生成できます。
 
-HTML API は `/renderer` サブパスです。traQ は `@traq-markdown-parser/traq/renderer` の `messageRenderer`、CSS は `@traq-markdown-parser/traq/index.css` を利用します。
+HTML API は `/renderer` サブパスです。traQ は `@traq-markdown-parser/traq/renderer` の `messageRenderers`、CSS は `@traq-markdown-parser/traq/index.css` を利用します。
 
 ### HTML の利用例
 
 ```ts
 import { createRuntime, presets } from "@traq-markdown-parser/traq";
-import { messageRenderer } from "@traq-markdown-parser/traq/renderer";
+import { messageRenderers } from "@traq-markdown-parser/traq/renderer";
 import "@traq-markdown-parser/traq/index.css";
 
 const runtime = await createRuntime(wasmBytes);
 const parser = runtime.createParser(presets.traq.v1);
-const view = messageRenderer({ origin: "https://q.example.test" });
-const { renderedText, embeddings } = view.render(parser.parse(source));
+const view = messageRenderers({ origin: "https://q.example.test" });
+const document = parser.parse(source);
+const { renderedText, embeddings } = view.standard.render(document);
+const condensed = view.condensed.render(document);
 runtime.dispose();
 ```
 
