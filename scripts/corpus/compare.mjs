@@ -49,20 +49,20 @@ const lock = JSON.parse(show(v.sui, v["sui-ref"], "package-lock.json"));
 const rendererVersion =
   lock.packages["node_modules/@traptitech/traq-markdown-it"].version;
 const { createRequire } = await import("node:module");
-const require = createRequire(import.meta.url);
-const katexVersion = require(
-  require.resolve("katex/package.json", {
-    paths: [path.resolve(root, "../commonmark")],
-  }),
-).version;
+const currentRequire = createRequire(
+  path.resolve(root, "../commonmark/package.json"),
+);
+const katexVersion = currentRequire("katex").version;
+const highlightVersion = currentRequire("highlight.js").versionString;
 const baselinePackage = {
   private: true,
   type: "module",
   dependencies: {
     "@traptitech/traq-markdown-it": rendererVersion,
     katex: katexVersion,
+    "highlight.js": highlightVersion,
   },
-  overrides: { katex: katexVersion },
+  overrides: { katex: katexVersion, "highlight.js": highlightVersion },
 };
 await writeFile(
   path.join(baseline, "package.json"),
@@ -82,8 +82,18 @@ run(
   ],
   baseline,
 );
+const baselineRequire = createRequire(path.join(baseline, "package.json"));
+const legacyRequire = createRequire(
+  baselineRequire.resolve("@traptitech/traq-markdown-it"),
+);
+const katexBefore = legacyRequire("katex").version;
+const highlightBefore = legacyRequire("highlight.js").versionString;
+if (katexBefore !== katexVersion || highlightBefore !== highlightVersion)
+  throw Error("Comparison requires matching KaTeX and highlight.js versions");
 Object.assign(versions, {
-  katexBefore: katexVersion,
+  katexBefore,
+  highlightBefore,
+  highlightAfter: highlightVersion,
   katexAfter: katexVersion,
   baselineRenderer: rendererVersion,
 });

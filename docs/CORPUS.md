@@ -13,7 +13,7 @@ The credential file contains `TRAQ_API_BASE_URL` and `BOT_ACCESS_TOKEN`. Alterna
 
 Each UTF-8 JSONL row has a `source` string containing the original message. Collection also writes pseudonymous `id` and `channel` fields and a manifest. Message contents remain private data: output stays under the ignored `.private/corpora/` directory, and logs omit message bodies and credentials. Existing JSONL corpora with a `source` field can be compared without collection.
 
-Comparison defaults to 100,000 messages and the local `origin/master` refs of both application checkouts. Fetch those refs first if needed. Use `--max`, `--traq-ref`, `--sui-ref`, and `--out` to change them. Both renderers use the same deterministic store and KaTeX version to avoid store data and math dependency versions obscuring parser differences. The output records the selected revisions and dependency versions.
+Comparison defaults to 100,000 messages and the local `origin/master` refs of both application checkouts. Fetch those refs first if needed. Use `--max`, `--traq-ref`, `--sui-ref`, and `--out` to change them. Both renderers use the same deterministic store, KaTeX version, and highlight.js version to avoid store data and presentation dependency versions obscuring parser differences. The baseline pins both libraries to the versions installed in the current renderer. Comparison verifies the resolved versions before processing messages and records them with the selected revisions.
 
 The result directory contains raw JSONL differences for full rendering, inline rendering, notifications, and embeddings, plus summaries and two self-contained reports:
 
