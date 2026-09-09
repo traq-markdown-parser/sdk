@@ -22,7 +22,11 @@ func TestProcessing(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer runtime.Close(ctx)
-	processor, err := runtime.NewProcessor(ctx, ProcessorPresetTraQV1, ProcessorOptions{Origin: "https://q.example.test"})
+	processor, err := runtime.NewProcessor(
+		ctx,
+		ProcessorPresetTraQV1,
+		ProcessorOptions{Origin: "https://q.example.test"},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +64,8 @@ func TestProcessing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(result.References.Mentions, []string{id, id}) || result.NotificationText != "@alice ██████ "+user {
+	if !reflect.DeepEqual(result.References.Mentions, []string{id, id}) ||
+		result.NotificationText != "@alice ██████ "+user {
 		t.Fatalf("%+v", result)
 	}
 	url := "https://q.example.test/files/" + id
@@ -71,10 +76,18 @@ func TestProcessing(t *testing.T) {
 	if _, err := runtime.NewProcessor(ctx, ProcessorPreset("missing"), ProcessorOptions{}); err == nil {
 		t.Fatal("accepted missing preset")
 	}
-	if _, err := runtime.NewProcessor(ctx, ProcessorPresetTraQV1, ProcessorOptions{Origin: strings.Repeat("x", 2049)}); err == nil {
+	if _, err := runtime.NewProcessor(
+		ctx,
+		ProcessorPresetTraQV1,
+		ProcessorOptions{Origin: strings.Repeat("x", 2049)},
+	); err == nil {
 		t.Fatal("accepted oversized origin")
 	}
-	for _, source := range []string{strings.Repeat("x", inputBytes+1), string([]byte{255}), strings.Repeat("!!", 100) + "deep" + strings.Repeat("!!", 100)} {
+	for _, source := range []string{
+		strings.Repeat("x", inputBytes+1),
+		string([]byte{255}),
+		strings.Repeat("!!", 100) + "deep" + strings.Repeat("!!", 100),
+	} {
 		if _, err := processor.Process(ctx, source); err == nil {
 			t.Fatal("accepted invalid input")
 		}

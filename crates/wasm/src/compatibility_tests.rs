@@ -4,15 +4,22 @@ use traq_markdown_grammar::{Document, ParseError, presets};
 
 fn result(value: Result<Document, ParseError>) -> Value {
     match value {
-        Ok(document) => json!({"Ok": serde_json::from_slice::<Value>(
-            &nodes::codec().encode(&document).unwrap()).unwrap()}),
+        Ok(document) => json!({"Ok": encoded_document(&document)}),
         Err(error) => json!({"Err": error}),
     }
 }
 
+fn encoded_document(document: &Document) -> Value {
+    let encoded = nodes::codec().encode(document).unwrap();
+    serde_json::from_slice(&encoded).unwrap()
+}
+
 fn actual(source: &str) -> Value {
     let parser = presets::traq::v1::parser();
-    json!({"block": result(parser.parse(source)), "inline": result(parser.parse_inline(source))})
+    json!({
+        "block": result(parser.parse(source)),
+        "inline": result(parser.parse_inline(source))
+    })
 }
 
 #[test]

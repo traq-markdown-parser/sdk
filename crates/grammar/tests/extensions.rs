@@ -23,8 +23,8 @@ fn has_link(nodes: &[markdown_parser::Node]) -> bool {
     })
 }
 
-fn note() -> (Plugin, BlockRule) {
-    let block = BlockRule::new(|input, budget| {
+fn note_block() -> BlockRule {
+    BlockRule::new(|input, budget| {
         let Some(title) = input.current().strip_prefix(":::note ") else {
             return Ok(None);
         };
@@ -47,10 +47,11 @@ fn note() -> (Plugin, BlockRule) {
             )?,
         ))
     })
-    .interrupts(|probe| probe.line.starts_with(":::note "));
-    let mut plugin = Plugin::new(&Declaration::group("test").new("note"));
-    plugin.add(&block);
-    plugin.add(InlineRule::new(b"~", |input, _| {
+    .interrupts(|probe| probe.line.starts_with(":::note "))
+}
+
+fn note_inline() -> InlineRule {
+    InlineRule::new(b"~", |input, _| {
         if !input.tail().starts_with("~note~") {
             return Ok(None);
         }
@@ -61,8 +62,11 @@ fn note() -> (Plugin, BlockRule) {
             }
             .into(),
         )))
-    }));
-    plugin.add(TextRule::new(|input, _| {
+    })
+}
+
+fn note_text() -> TextRule {
+    TextRule::new(|input, _| {
         let Some(offset) = input.text().find("NOTE") else {
             return Ok(vec![]);
         };
@@ -75,7 +79,15 @@ fn note() -> (Plugin, BlockRule) {
             .into(),
             children: vec![],
         }])
-    }));
+    })
+}
+
+fn note() -> (Plugin, BlockRule) {
+    let block = note_block();
+    let mut plugin = Plugin::new(&Declaration::group("test").new("note"));
+    plugin.add(&block);
+    plugin.add(note_inline());
+    plugin.add(note_text());
     (plugin, block)
 }
 

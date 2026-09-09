@@ -29,8 +29,19 @@ pub(crate) fn catalog() -> Catalog {
     catalog.exports = json!({
         "plugins": {
             "commonmark": { "core": core, "html": html },
-            "generic": { "math": math, "mark": mark, "strikethrough": strikethrough, "table": table, "linkify": linkify },
-            "trap": { "spoiler": spoiler, "references": references, "stamp": stamp, "compat": compat }
+            "generic": {
+                "math": math,
+                "mark": mark,
+                "strikethrough": strikethrough,
+                "table": table,
+                "linkify": linkify,
+            },
+            "trap": {
+                "spoiler": spoiler,
+                "references": references,
+                "stamp": stamp,
+                "compat": compat,
+            }
         },
         "presets": { "commonmark": commonmark, "traq": { "v1": v1 } }
     });

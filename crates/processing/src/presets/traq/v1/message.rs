@@ -15,6 +15,7 @@ pub struct Message {
 pub struct Processor {
     links: Links,
 }
+
 impl Processor {
     pub fn new(origin: &str) -> Self {
         Self {
@@ -27,6 +28,16 @@ impl Processor {
             .validate(ValidationLimits::default())
             .map_err(|_| "invalid_node")?;
         let mut message = Message::default();
+        let edits = self.collect_edits(document, &mut message);
+        message.plain_text = apply_edits(document, edits);
+        Ok(message)
+    }
+
+    fn collect_edits<'a>(
+        &self,
+        document: &'a Document,
+        message: &mut Message,
+    ) -> Vec<(Span, &'a str)> {
         let mut edits = Vec::new();
         let mut pending: Vec<_> = document.children.iter().rev().collect();
         while let Some(node) = pending.pop() {
@@ -78,20 +89,22 @@ impl Processor {
             }
             pending.extend(node.children.iter().rev());
         }
-
-        edits.sort_by_key(|(span, _)| (span.start, std::cmp::Reverse(span.end)));
-        let mut position = 0;
-        for (span, replacement) in edits {
-            if span.start < position {
-                continue;
-            }
-            message
-                .plain_text
-                .push_str(&document.source[position..span.start]);
-            message.plain_text.push_str(replacement);
-            position = span.end;
-        }
-        message.plain_text.push_str(&document.source[position..]);
-        Ok(message)
+        edits
     }
+}
+
+fn apply_edits<'a>(document: &'a Document, mut edits: Vec<(Span, &'a str)>) -> String {
+    edits.sort_by_key(|(span, _)| (span.start, std::cmp::Reverse(span.end)));
+    let mut plain_text = String::new();
+    let mut position = 0;
+    for (span, replacement) in edits {
+        if span.start < position {
+            continue;
+        }
+        plain_text.push_str(&document.source[position..span.start]);
+        plain_text.push_str(replacement);
+        position = span.end;
+    }
+    plain_text.push_str(&document.source[position..]);
+    plain_text
 }

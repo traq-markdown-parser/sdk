@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-    import { shape } from "@traq-markdown-parser/core/codegen/schema";
+import { shape } from "@traq-markdown-parser/core/codegen/schema";
 import { javascript } from "@traq-markdown-parser/core/codegen/javascript";
 import { goPayload } from "@traq-markdown-parser/core/codegen/go";
 import { nodes, names } from "../../dist/generated/nodes.js";

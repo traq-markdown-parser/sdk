@@ -17,37 +17,43 @@ thread_local! { pub static IO: RefCell<Buffers> = RefCell::default(); }
 
 impl Buffers {
     pub fn reply_document(&mut self, result: &Result<markdown_ast::Document, ParseError>) {
+        let result = match result {
+            Ok(document) => self.encode_document(document),
+            Err(error) => Err(error.clone()),
+        };
         match result {
-            Ok(document) => match crate::nodes::codec().encode(document) {
-                Ok(bytes) if bytes.len() + 13 <= MAX_OUTPUT => {
-                    self.output.clear();
-                    self.output.extend_from_slice(b"{\"document\":");
-                    self.output.extend_from_slice(&bytes);
-                    self.output.push(b'}');
-                }
-                Ok(_) => {
-                    self.reply::<(), _>(
-                        "document",
-                        &Err(ParseError::ResourceLimit {
-                            resource: "output_bytes".into(),
-                        }),
-                    );
-                }
-                Err(error) => {
-                    let error = if error.is_io() {
-                        ParseError::ResourceLimit {
-                            resource: "output_bytes".into(),
-                        }
-                    } else {
-                        ParseError::InternalError
-                    };
-                    self.reply::<(), _>("document", &Err(error));
-                }
-            },
-            Err(error) => {
-                self.reply::<(), _>("document", &Err(error));
-            }
+            Ok(bytes) => self.write_document(&bytes),
+            Err(error) => self.reply_document_error(&error),
         }
+    }
+
+    fn encode_document(&self, document: &markdown_ast::Document) -> Result<Vec<u8>, ParseError> {
+        let bytes = crate::nodes::codec().encode(document).map_err(|error| {
+            if error.is_io() {
+                ParseError::ResourceLimit {
+                    resource: "output_bytes".into(),
+                }
+            } else {
+                ParseError::InternalError
+            }
+        })?;
+        if bytes.len() + 13 > MAX_OUTPUT {
+            return Err(ParseError::ResourceLimit {
+                resource: "output_bytes".into(),
+            });
+        }
+        Ok(bytes)
+    }
+
+    fn write_document(&mut self, bytes: &[u8]) {
+        self.output.clear();
+        self.output.extend_from_slice(b"{\"document\":");
+        self.output.extend_from_slice(bytes);
+        self.output.push(b'}');
+    }
+
+    fn reply_document_error(&mut self, error: &ParseError) {
+        self.reply::<(), _>("document", &Err(error));
     }
 
     pub fn source(&self) -> Result<&str, ParseError> {

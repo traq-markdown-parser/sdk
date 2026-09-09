@@ -7,7 +7,11 @@ pub(crate) fn codec() -> &'static Codec {
 
         macro_rules! register {
             ($group:literal, $module:ident, $($ty:ident),* $(,)?) => {
-                $(codec.register::<$module::$ty>().expect("unique node contract");)*
+                $(
+                    codec
+                        .register::<$module::$ty>()
+                        .expect("unique node contract");
+                )*
             };
         }
 

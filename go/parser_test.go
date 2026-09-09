@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	commonmark "github.com/traq-markdown-parser/commonmark/go"
-	trap "github.com/traq-markdown-parser/trap-extension/go"
 	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
+
+	commonmark "github.com/traq-markdown-parser/commonmark/go"
+	trap "github.com/traq-markdown-parser/trap-extension/go"
 )
 
 func parserFor(t *testing.T, preset Preset) *Parser {
@@ -69,7 +70,11 @@ func TestFixtureAST(t *testing.T) {
 			t.Fatal(err)
 		}
 		for i, fixture := range cases {
-			for mode, parse := range map[string]func(context.Context, string) (*Document, error){"block": p.Parse, "inline": p.ParseInline} {
+			parsers := map[string]func(context.Context, string) (*Document, error){
+				"block":  p.Parse,
+				"inline": p.ParseInline,
+			}
+			for mode, parse := range parsers {
 				source := fixture.Source
 				if fixture.Example != 0 {
 					source = sources[fixture.Example]
@@ -118,7 +123,11 @@ func TestLifecycleAndBounds(t *testing.T) {
 	if plain.Children[0].Kind != commonmark.TextName {
 		t.Fatal("commonmark used traq grammar")
 	}
-	for _, source := range []string{strings.Repeat("x", inputBytes+1), string([]byte{255}), strings.Repeat("!!", 100) + "deep" + strings.Repeat("!!", 100)} {
+	for _, source := range []string{
+		strings.Repeat("x", inputBytes+1),
+		string([]byte{255}),
+		strings.Repeat("!!", 100) + "deep" + strings.Repeat("!!", 100),
+	} {
 		if _, err := p.Parse(ctx, source); err == nil {
 			t.Fatal("expected error")
 		}
@@ -202,7 +211,8 @@ func TestBuildMismatch(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer r.Close(context.Background())
-	if _, err := r.NewParser(context.Background(), PresetTraQV1); err == nil || !strings.Contains(err.Error(), "does not match") {
+	if _, err := r.NewParser(context.Background(), PresetTraQV1); err == nil ||
+		!strings.Contains(err.Error(), "does not match") {
 		t.Fatal(err)
 	}
 	if _, err := NewRuntime(context.Background(), []byte{0, 97, 115, 109, 1, 0, 0, 0}); err == nil {

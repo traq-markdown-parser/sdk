@@ -14,6 +14,13 @@ pub fn builder() -> GrammarBuilder {
     let base = syntax();
     let mut builder = GrammarBuilder::new();
     builder.add(&base.plugin).expect("unique base rules");
+    add_plugins(&mut builder);
+    set_inline_precedence(&mut builder, base);
+    set_block_precedence(&mut builder, base);
+    builder
+}
+
+fn add_plugins(builder: &mut GrammarBuilder) {
     for plugin in [
         extensions::table::plugin(),
         extensions::math::plugin(),
@@ -27,6 +34,9 @@ pub fn builder() -> GrammarBuilder {
     ] {
         builder.add(plugin).expect("unique V1 plugins");
     }
+}
+
+fn set_inline_precedence(builder: &mut GrammarBuilder, base: &commonmark::Syntax) {
     // Positions are frozen in the profile; plugins do not guess other rules' precedence.
     for (rule, anchor) in [
         (extensions::math::inline_rule(), &base.inline.code),
@@ -44,6 +54,9 @@ pub fn builder() -> GrammarBuilder {
             .before(rule, anchor)
             .expect("existing V1 inline anchors");
     }
+}
+
+fn set_block_precedence(builder: &mut GrammarBuilder, base: &commonmark::Syntax) {
     for (rule, anchor) in [
         (trap::compat::blank_rule(), &base.block.blank),
         (extensions::table::block_rule(), &base.block.fence),
@@ -54,7 +67,6 @@ pub fn builder() -> GrammarBuilder {
             .before(rule, anchor)
             .expect("existing V1 block anchors");
     }
-    builder
 }
 
 pub fn grammar() -> &'static Grammar {

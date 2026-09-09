@@ -45,7 +45,11 @@ func run(path string) error {
 	}
 	fmt.Println(string(raw))
 
-	processor, err := runtime.NewProcessor(ctx, markdown.ProcessorPresetTraQV1, markdown.ProcessorOptions{Origin: "https://q.example.test"})
+	processor, err := runtime.NewProcessor(
+		ctx,
+		markdown.ProcessorPresetTraQV1,
+		markdown.ProcessorOptions{Origin: "https://q.example.test"},
+	)
 	if err != nil {
 		return err
 	}
