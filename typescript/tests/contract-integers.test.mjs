@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { javascript } from "@traq-markdown-parser/core/codegen/javascript";
-import { goPayload } from "../../scripts/contracts/go.mjs";
+import { goPayload } from "@traq-markdown-parser/core/codegen/go";
 import { shape } from "@traq-markdown-parser/core/codegen/schema";
 import ts from "typescript";
 

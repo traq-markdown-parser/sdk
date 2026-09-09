@@ -24,7 +24,7 @@ trap-extension にあります。このリポジトリがそれらに依存し�
 
 ## ビルド
 
-Node.js 24 以降、Go 1.25 以降、rustup が必要です。Rust と Wasm target は `rust-toolchain.toml` で固定しています。
+Node.js 24 以降、Go 1.26 以降、rustup が必要です。Rust と Wasm target は `rust-toolchain.toml` で固定しています。
 
 ```sh
 npm ci

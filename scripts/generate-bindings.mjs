@@ -13,7 +13,7 @@ const entries = Object.entries(manifest.nodes).map(([key, node]) => [
   node.schema,
 ]);
 const files = await typescriptFiles(manifest, input);
-files.set("go/nodes_generated.go", goNodes(entries));
+files.set("go/nodes_generated.go", goNodes(manifest));
 for (const [name, source] of presetFiles(manifest.presets))
   files.set(name, source);
 for (const [name, source] of await processingFiles(manifest.processing, input))

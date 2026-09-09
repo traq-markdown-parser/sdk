@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { goContract } from "./go.mjs";
+import { goContract } from "@traq-markdown-parser/core/codegen/go";
 import { presetFiles } from "./presets.mjs";
 
 export async function processingFiles(schemas, input) {

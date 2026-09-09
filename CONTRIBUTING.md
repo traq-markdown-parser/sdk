@@ -2,7 +2,7 @@
 
 ## Setup and verification
 
-Use Node.js 24+, Go 1.25+, and rustup. The Rust toolchain and Wasm target are pinned in `rust-toolchain.toml`. Windows additionally needs the MSVC C++ build tools; WSL and Bash are not required.
+Use Node.js 24+, Go 1.26+, and rustup. The Rust toolchain and Wasm target are pinned in `rust-toolchain.toml`. Windows additionally needs the MSVC C++ build tools; WSL and Bash are not required.
 
 Keep core, commonmark, trap-extension and traq as sibling checkouts. Build their npm packages in that dependency order before running the traq checks.
 
@@ -34,14 +34,16 @@ Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache res
 | crates/processing | traQ notification and extraction presets |
 | crates/processor | Parse-once composition returning notification and references |
 | crates/wasm | Wasm ABI, distribution catalog, registered node contract list |
-| `typescript/index.ts`, `go/parser.go` | Thin Wasm transport and lifecycle |
-| `typescript/validation.ts` | Generic helpers for optional generated payload guards |
-| `typescript/generated`, `go/*_generated.go` | Rust-derived payloads, presets and artifact metadata |
-| `scripts/contracts` | Contract-to-binding generators |
+| `typescript/index.ts` | TypeScript Wasm transport and lifecycle |
+| `go/parser.go` | traQ preset and artifact selection over core Go runtime |
+| core Go module | Shared AST decoding and Wasm runtime |
+| commonmark / trap-extension Go modules | Generated payloads and factories owned by each extension |
+| `typescript/generated`, `go/*_generated.go` | Owner composition, presets, processing output and artifact metadata |
+| core `scripts/contracts`; traq `scripts/contracts` | Generic code generation; distribution composition |
 | `tests/fixtures` | Public cross-language and distribution compatibility fixtures |
 | `examples/{rust,go,typescript}` | Public API consumers |
 
-Bindings are authored in `.ts`; `.js` and `.d.ts` are build outputs. Rust is the source of truth for generated payload types and validators. Do not hand-edit generated files. HTML rendering and CSS belong to `traPtitech/traq-markdown-it`.
+Bindings are authored in `.ts`; `.js` and `.d.ts` are build outputs. Rust is the source of truth for generated payload types and validators. Do not hand-edit generated files. HTML implementations belong to their core / CommonMark / traP owners; traQ composes them and owns its presentation CSS.
 
 ## Updating dependencies
 

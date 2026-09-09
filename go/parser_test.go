@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	commonmark "github.com/traq-markdown-parser/commonmark/go"
+	trap "github.com/traq-markdown-parser/trap-extension/go"
 	"os"
 	"reflect"
 	"strings"
@@ -106,14 +108,14 @@ func TestLifecycleAndBounds(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := first.Children[0].Data.(*Stamp); !ok {
+	if _, ok := first.Children[0].Data.(*trap.Stamp); !ok {
 		t.Fatalf("wrong payload %T", first.Children[0].Data)
 	}
 	plain, err := common.ParseInline(ctx, ":stamp:")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if plain.Children[0].Kind != TextName {
+	if plain.Children[0].Kind != commonmark.TextName {
 		t.Fatal("commonmark used traq grammar")
 	}
 	for _, source := range []string{strings.Repeat("x", inputBytes+1), string([]byte{255}), strings.Repeat("!!", 100) + "deep" + strings.Repeat("!!", 100)} {
@@ -130,19 +132,6 @@ func TestLifecycleAndBounds(t *testing.T) {
 	canceled, cancel := context.WithCancel(ctx)
 	cancel()
 	if _, err := p.Parse(canceled, "x"); !errors.Is(err, context.Canceled) {
-		t.Fatal(err)
-	}
-	// Canceling while waiting must not close the Wasm instance.
-	p.gate <- struct{}{}
-	waiting, stop := context.WithCancel(ctx)
-	done := make(chan error, 1)
-	go func() { _, err := p.Parse(waiting, "waiting"); done <- err }()
-	stop()
-	if err := <-done; !errors.Is(err, context.Canceled) {
-		t.Fatal(err)
-	}
-	<-p.gate
-	if _, err := p.Parse(ctx, "still open"); err != nil {
 		t.Fatal(err)
 	}
 	if err := p.Close(ctx); err != nil {

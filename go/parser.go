@@ -1,115 +1,59 @@
-// Package markdown calls Rust parsing and processing implementations.
+// Package markdown selects traQ presets and pairs them with the distributed Wasm.
 package markdown
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-
-	"github.com/tetratelabs/wazero"
-	"github.com/tetratelabs/wazero/api"
+	"github.com/traq-markdown-parser/core/go/binding"
 )
 
-// Runtime compiles Wasm once and owns its parser and processor instances.
-type Runtime struct {
-	runtime  wazero.Runtime
-	compiled wazero.CompiledModule
-}
-
-// Parser owns one Wasm instance. Calls are serialized; use separate parsers for parallel execution.
-// A context canceled during a Wasm call closes the instance; create a new Parser to resume.
-type Parser struct {
-	*instance
-}
-
-// Processor parses once in Rust, then renders notifications and extracts references.
-type Processor struct {
-	*instance
-}
-
-type instance struct {
-	module api.Module
-	gate   chan struct{}
-}
+type Runtime struct{ runtime *binding.Runtime }
+type Parser struct{ instance *binding.Instance }
+type Processor struct{ instance *binding.Instance }
 
 func NewRuntime(ctx context.Context, wasm []byte) (*Runtime, error) {
-	rt := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithMemoryLimitPages(memoryPages).WithCloseOnContextDone(true))
-	compiled, err := rt.CompileModule(ctx, wasm)
+	runtime, err := binding.NewRuntime(ctx, wasm, binding.Artifact{BuildID: buildID, InputBytes: inputBytes, MemoryPages: memoryPages})
 	if err != nil {
-		rt.Close(context.Background())
 		return nil, err
 	}
-	for _, name := range []string{"input_ptr", "output_ptr", "configure", "parse", "configure_processor", "process"} {
-		if compiled.ExportedMemories()["memory"] == nil || compiled.ExportedFunctions()[name] == nil {
-			rt.Close(context.Background())
-			return nil, fmt.Errorf("invalid parser Wasm exports")
-		}
-	}
-	return &Runtime{runtime: rt, compiled: compiled}, nil
+	return &Runtime{runtime: runtime}, nil
 }
-
-// Close releases the compiled module and all parsers created by this Runtime.
-func (r *Runtime) Close(ctx context.Context) error { return r.runtime.Close(ctx) }
-
-// NewParser creates an independent instance using the shared compiled module.
+func (r *Runtime) Close(ctx context.Context) error   { return r.runtime.Close(ctx) }
+func (p *Parser) Close(ctx context.Context) error    { return p.instance.Close(ctx) }
+func (p *Processor) Close(ctx context.Context) error { return p.instance.Close(ctx) }
 func (r *Runtime) NewParser(ctx context.Context, preset Preset) (*Parser, error) {
-	i, err := r.instantiate(ctx, "configure", string(preset))
+	instance, err := r.runtime.NewInstance(ctx, "configure", string(preset))
 	if err != nil {
 		return nil, err
 	}
-	return &Parser{i}, nil
+	return &Parser{instance: instance}, nil
 }
-
 func (r *Runtime) NewProcessor(ctx context.Context, preset ProcessorPreset, options ProcessorOptions) (*Processor, error) {
 	config, err := json.Marshal(map[string]any{"preset": preset, "options": options})
 	if err != nil {
 		return nil, err
 	}
-	i, err := r.instantiate(ctx, "configure_processor", string(config))
+	instance, err := r.runtime.NewInstance(ctx, "configure_processor", string(config))
 	if err != nil {
 		return nil, err
 	}
-	return &Processor{i}, nil
+	return &Processor{instance: instance}, nil
 }
-
-func (r *Runtime) instantiate(ctx context.Context, operation, config string) (*instance, error) {
-	module, err := r.runtime.InstantiateModule(ctx, r.compiled, wazero.NewModuleConfig().WithName(""))
-	if err != nil {
-		return nil, err
-	}
-	p := &instance{module: module, gate: make(chan struct{}, 1)}
-	if _, err := p.call(ctx, operation, config); err != nil {
-		p.Close(context.Background())
-		return nil, err
-	}
-	return p, nil
-}
-
-// Close releases only this instance, leaving its Runtime usable.
-func (p *instance) Close(ctx context.Context) error { return p.module.Close(ctx) }
-
 func (p *Parser) Parse(ctx context.Context, source string) (*Document, error) {
 	return p.parse(ctx, source, 0)
 }
-
 func (p *Parser) ParseInline(ctx context.Context, source string) (*Document, error) {
 	return p.parse(ctx, source, 1)
 }
-
 func (p *Parser) parse(ctx context.Context, source string, mode uint64) (*Document, error) {
-	raw, err := p.invoke(ctx, "parse", source, mode)
+	raw, err := p.instance.Call(ctx, "parse", source, mode)
 	if err != nil {
 		return nil, err
 	}
-	var document Document
-	if err := json.Unmarshal(raw, &document); err != nil {
-		return nil, err
-	}
-	return &document, nil
+	return DecodeDocument(raw)
 }
-
 func (p *Processor) Process(ctx context.Context, source string) (*ProcessOutput, error) {
-	raw, err := p.invoke(ctx, "process", source)
+	raw, err := p.instance.Call(ctx, "process", source)
 	if err != nil {
 		return nil, err
 	}
@@ -118,101 +62,4 @@ func (p *Processor) Process(ctx context.Context, source string) (*ProcessOutput,
 		return nil, err
 	}
 	return &result, nil
-}
-
-func (p *instance) invoke(ctx context.Context, operation, source string, args ...uint64) (json.RawMessage, error) {
-	select {
-	case p.gate <- struct{}{}:
-		defer func() { <-p.gate }()
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	return p.call(ctx, operation, source, args...)
-}
-
-func (p *instance) call(ctx context.Context, operation, input string, args ...uint64) (json.RawMessage, error) {
-	if p.module.IsClosed() {
-		return nil, fmt.Errorf("parser is closed")
-	}
-
-	if err := p.writeInput(ctx, input); err != nil {
-		return nil, err
-	}
-	length, err := p.run(ctx, operation, args...)
-	if err != nil {
-		return nil, err
-	}
-	output, err := p.readOutput(ctx, length)
-	if err != nil {
-		return nil, err
-	}
-	return decodeReply(output, operation)
-}
-
-func (p *instance) writeInput(ctx context.Context, input string) error {
-	if len(input) > inputBytes {
-		return fmt.Errorf("Wasm input limit exceeded")
-	}
-	pointer, err := p.module.ExportedFunction("input_ptr").Call(ctx, uint64(len(input)))
-	if err != nil {
-		return err
-	}
-	if pointer[0] == 0 {
-		return fmt.Errorf("Wasm input limit exceeded")
-	}
-	if !p.module.Memory().Write(uint32(pointer[0]), []byte(input)) {
-		return fmt.Errorf("invalid Wasm input range")
-	}
-	return nil
-}
-
-func (p *instance) run(ctx context.Context, operation string, args ...uint64) (uint64, error) {
-	result, err := p.module.ExportedFunction(operation).Call(ctx, args...)
-	if err != nil {
-		if ctx.Err() != nil {
-			return 0, ctx.Err()
-		}
-		return 0, err
-	}
-	return result[0], nil
-}
-
-func (p *instance) readOutput(ctx context.Context, length uint64) ([]byte, error) {
-	pointer, err := p.module.ExportedFunction("output_ptr").Call(ctx)
-	if err != nil {
-		return nil, err
-	}
-	output, ok := p.module.Memory().Read(uint32(pointer[0]), uint32(length))
-	if !ok {
-		return nil, fmt.Errorf("invalid Wasm output range")
-	}
-	return output, nil
-}
-
-func decodeReply(output []byte, operation string) (json.RawMessage, error) {
-
-	var reply struct {
-		Document   json.RawMessage `json:"document"`
-		Result     json.RawMessage `json:"result"`
-		Error      json.RawMessage `json:"error"`
-		Configured string          `json:"configured"`
-	}
-	if err := json.Unmarshal(output, &reply); err != nil {
-		return nil, err
-	}
-
-	if reply.Error != nil {
-		return nil, fmt.Errorf("markdown: %s", reply.Error)
-	}
-	if (operation == "configure" || operation == "configure_processor") && reply.Configured != buildID {
-		return nil, fmt.Errorf("Wasm does not match this SDK build")
-	}
-
-	if reply.Document != nil {
-		return reply.Document, nil
-	}
-	return reply.Result, nil
 }

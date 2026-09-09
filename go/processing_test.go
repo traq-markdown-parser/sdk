@@ -84,16 +84,6 @@ func TestProcessing(t *testing.T) {
 	if _, err := processor.Process(canceled, "x"); !errors.Is(err, context.Canceled) {
 		t.Fatal(err)
 	}
-	processor.gate <- struct{}{}
-	waiting, stop := context.WithCancel(ctx)
-	done := make(chan error, 1)
-	go func() { _, err := processor.Process(waiting, "x"); done <- err }()
-	stop()
-	if err := <-done; !errors.Is(err, context.Canceled) {
-		t.Fatal(err)
-	}
-	<-processor.gate
-
 	var wg sync.WaitGroup
 	for i := 0; i < 8; i++ {
 		wg.Add(1)

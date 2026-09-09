@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { goNodes } from '../../scripts/contracts/go.mjs';
+import { goNodes } from '@traq-markdown-parser/core/codegen/go';
 import { nodeFiles } from '@traq-markdown-parser/core/codegen/nodes';
 import { typescriptFiles } from '../../scripts/contracts/typescript.mjs';
 import { presetFiles } from '../../scripts/contracts/presets.mjs';
@@ -24,7 +24,7 @@ test('new Rust-exported payloads and presets generate both host APIs', async () 
     const go = goNodes([[key,schema]]);
     assert.match(go, /Label string/);
     assert.match(go, /Active bool/);
-    assert.match(go, /case BadgeName: payload = &Badge\{\}/);
+    assert.match(go, /case BadgeName: return &Badge\{\}/);
     assert.throws(()=>goNodes([[key,schema],['another::BadgeData',schema]]),/Duplicate generated payload type/);
     const presets = presetFiles({commonmark:0,custom:{compact:1}});
     assert.match(presets.get('typescript/generated/presets.ts'), /"custom.compact"/);

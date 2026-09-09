@@ -2,6 +2,8 @@ package markdown
 
 import (
 	"context"
+	commonmark "github.com/traq-markdown-parser/commonmark/go"
+	trap "github.com/traq-markdown-parser/trap-extension/go"
 	"os"
 	"sync"
 	"testing"
@@ -26,7 +28,7 @@ func TestRuntimeOwnership(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for parser, kind := range map[*Parser]string{traq: StampName, common: TextName} {
+	for parser, kind := range map[*Parser]string{traq: trap.StampName, common: commonmark.TextName} {
 		doc, err := parser.ParseInline(ctx, ":stamp:")
 		if err != nil {
 			t.Fatal(err)
