@@ -277,12 +277,12 @@
   {
     "name": "file-json",
     "source": "!{\"type\":\"file\",\"id\":\"00000000-0000-4000-8000-000000000001\",\"raw\":\"file\"}",
-    "notification": "!{\"type\":\"file\",\"id\":\"00000000-0000-4000-8000-000000000001\",\"raw\":\"file\"}"
+    "notification": "[添付ファイル]"
   },
   {
     "name": "message-json",
     "source": "!{\"type\":\"message\",\"id\":\"00000000-0000-4000-8000-000000000001\",\"raw\":\"message\"}",
-    "notification": "!{\"type\":\"message\",\"id\":\"00000000-0000-4000-8000-000000000001\",\"raw\":\"message\"}"
+    "notification": "[引用メッセージ]"
   },
   {
     "name": "crlf",

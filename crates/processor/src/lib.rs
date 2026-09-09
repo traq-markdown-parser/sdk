@@ -28,6 +28,9 @@ pub struct ProcessorOptions {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProcessOutput {
     pub notification_text: String,
+    pub plain_text: String,
+    pub attachments: Vec<String>,
+    pub citations: Vec<String>,
     pub references: References,
 }
 
@@ -36,6 +39,7 @@ pub struct Processor {
     parser: Parser,
     renderer: Renderer,
     extractor: Extractor<References>,
+    message: v1::message::Processor,
 }
 
 impl Processor {
@@ -45,6 +49,7 @@ impl Processor {
                 parser: traq_markdown_grammar::presets::traq::v1::parser(),
                 renderer: Renderer::new(&v1::notification::preset(&options.origin)?),
                 extractor: Extractor::new(&v1::references::preset()?),
+                message: v1::message::Processor::new(&options.origin),
             }),
         }
     }
@@ -63,8 +68,12 @@ impl Processor {
             .join(" ");
 
         let references = self.extractor.extract(&document)?;
+        let message = self.message.process(&document)?;
         Ok(ProcessOutput {
             notification_text,
+            plain_text: message.plain_text,
+            attachments: message.attachments,
+            citations: message.citations,
             references,
         })
     }

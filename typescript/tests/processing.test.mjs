@@ -25,7 +25,10 @@ test("Rust processing preserves all 787 notification expectations", async (t) =>
     const output = processor.process(fixture.source);
     assert.equal(output.notificationText, fixture.notification, fixture.name);
     assert.deepEqual(Object.keys(output).sort(), [
+      "attachments",
+      "citations",
       "notificationText",
+      "plainText",
       "references",
     ]);
   }
@@ -62,6 +65,7 @@ test("processors share compilation with parsers and have independent configurati
       mentions: [id, id],
       groupMentions: [],
       channelLinks: [],
+      embeddings: [{raw:"@alice",type:"user",id}, {raw:"@alice",type:"user",id}],
     });
     assert.equal(result.notificationText, `@alice ██████ ${user}`);
     first.dispose();

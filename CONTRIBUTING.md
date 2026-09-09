@@ -32,7 +32,7 @@ Go tests execute the built Wasm and use `-count=1` to avoid stale test-cache res
 | --- | --- |
 | crates/grammar | traQ grammar presets and the distribution catalog |
 | crates/processing | traQ notification and extraction presets |
-| crates/processor | Parse-once composition returning notification and references |
+| crates/processor | Parse-once composition returning notification, message text, references and attachments |
 | crates/wasm | Wasm ABI, distribution catalog, registered node contract list |
 | `typescript/index.ts` | TypeScript Wasm transport and lifecycle |
 | `go/parser.go` | traQ preset and artifact selection over core Go runtime |

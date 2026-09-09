@@ -6,5 +6,6 @@ export type ProcessorOptions = {
  * Origin used to recognize traQ file/message URLs; empty leaves URLs as text.
  */
 origin: string, };
-export type ProcessOutput = { notificationText: string, references: References, };
-export type References = { mentions: Array<string>, groupMentions: Array<string>, channelLinks: Array<string>, };
+export type ProcessOutput = { notificationText: string, plainText: string, attachments: Array<string>, citations: Array<string>, references: References, };
+export type References = { mentions: Array<string>, groupMentions: Array<string>, channelLinks: Array<string>, embeddings: Array<EmbeddedInfo>, };
+export type EmbeddedInfo = { raw: string, type: string, id: string, };

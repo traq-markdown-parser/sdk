@@ -11,7 +11,7 @@ macro_rules! node_types {
             MarkData, StrikethroughData,
         }
         $register! { "trap", markdown_trap_contracts,
-            StampData, ReferenceData, SpoilerData, BlankLineData,
+            StampData, ReferenceData, EmbeddingData, SpoilerData, BlankLineData,
         }
     };
 }

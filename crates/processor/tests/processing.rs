@@ -72,3 +72,35 @@ fn origin_options_are_validated_and_isolated() {
         .is_err()
     );
 }
+#[test]
+fn message_metadata_uses_the_same_syntax_tree() {
+    let processor = processor("https://q.example.test");
+    let id = "00000000-0000-0000-0000-000000000001";
+    let user = format!(r#"!{{"type":"user","id":"{id}","raw":"@alice"}}"#);
+    let file = format!(r#"!{{"type":"file","id":"{id}"}}"#);
+    let citation = format!(r#"!{{"type":"message","id":"{id}"}}"#);
+    let url = format!("https://q.example.test/files/{id}");
+    let source = format!("**{user}**\n{file} !!{citation}!!\n<{url}> [download]({url})\n`{file}`");
+    let result = processor.process(&source).unwrap();
+    assert_eq!(
+        result.plain_text,
+        format!(
+            "**@alice**\n[添付ファイル] !![引用メッセージ]!!\n<[添付ファイル]> [download]({url})\n`{file}`"
+        )
+    );
+    assert_eq!(result.references.mentions, [id]);
+    assert_eq!(result.attachments, [id, id, id]);
+    assert_eq!(result.citations, [id]);
+    assert!(!result.notification_text.contains("!!"));
+}
+
+#[test]
+fn message_metadata_keeps_unknown_or_invalid_embeddings_literal() {
+    let processor = processor("https://q.example.test");
+    let source = r#"!{"type":"file","id":"invalid"} !{"type":"unknown","id":"00000000-0000-0000-0000-000000000001"}"#;
+    let result = processor.process(source).unwrap();
+    assert_eq!(result.plain_text, source);
+    assert_eq!(result.notification_text, source);
+    assert!(result.attachments.is_empty());
+    assert!(result.citations.is_empty());
+}

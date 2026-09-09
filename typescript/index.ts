@@ -9,6 +9,7 @@ export type {
   ProcessorOptions,
   ProcessOutput,
   References,
+  EmbeddedInfo,
 } from "./generated/processing.js";
 import { buildId, inputBytes } from "./generated/artifact.js";
 import type { Document } from "./generated/nodes.js";

@@ -150,3 +150,5 @@ Wasm の起動は利用側が明示的に行います。`/renderer` を import �
 ## Corpus comparison
 
 Use `npm run corpus:collect`, `npm run corpus:compare`, and `npm run corpus:report` to collect messages and generate offline HTML/MHTML difference reports. See [Corpus comparison](docs/CORPUS.md) for inputs, options, and output files.
+
+Go consumers use `github.com/traq-markdown-parser/traq/go` for presets and artifact pairing. Shared AST/transport live in the core Go module; payload factories live in commonmark and trap-extension. `Processor.Process` returns notification text, source-preserving message text, references with embedding metadata, attachment IDs and citation IDs from one Rust parse.

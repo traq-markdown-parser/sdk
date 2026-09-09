@@ -205,7 +205,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-contracts"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=c7ed47d4739765e6bd9e25468d4c9dfa4f271d61#c7ed47d4739765e6bd9e25468d4c9dfa4f271d61"
 dependencies = [
  "markdown-ast",
  "markdown-definitions",
@@ -217,7 +217,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-extraction"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=c7ed47d4739765e6bd9e25468d4c9dfa4f271d61#c7ed47d4739765e6bd9e25468d4c9dfa4f271d61"
 dependencies = [
  "markdown-extractor",
  "markdown-trap-contracts",
@@ -229,7 +229,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-syntax"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=c7ed47d4739765e6bd9e25468d4c9dfa4f271d61#c7ed47d4739765e6bd9e25468d4c9dfa4f271d61"
 dependencies = [
  "markdown-commonmark",
  "markdown-definitions",
@@ -242,7 +242,7 @@ dependencies = [
 [[package]]
 name = "markdown-trap-text"
 version = "0.1.0"
-source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=a1040351d6ac05c273bca05da7539b161591de49#a1040351d6ac05c273bca05da7539b161591de49"
+source = "git+https://github.com/traq-markdown-parser/trap-extension.git?rev=c7ed47d4739765e6bd9e25468d4c9dfa4f271d61#c7ed47d4739765e6bd9e25468d4c9dfa4f271d61"
 dependencies = [
  "markdown-renderer",
  "markdown-trap-contracts",
@@ -547,6 +547,7 @@ dependencies = [
 name = "traq-markdown-processing"
 version = "0.1.0"
 dependencies = [
+ "markdown-ast",
  "markdown-commonmark-contracts",
  "markdown-commonmark-text",
  "markdown-extractor",

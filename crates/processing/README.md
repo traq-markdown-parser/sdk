@@ -31,6 +31,7 @@ spoiler は描画した内容の Unicode scalar value 数だけ `█` を並べ�
 
 参照抽出は user / group / channel の ID を正規化して返します。順序・重複を保持し、
 spoiler 内も対象です。コード内は parser が参照ノードを生成しないため対象になりません。
-添付・引用 ID の抽出、ユーザー情報の解決、通知送信は含みません。
+`message::Processor` は同じ AST から本文・添付 ID・引用 ID を作ります。本文は Markdown 記法と改行を保ち、参照 JSON をラベル、ファイル・引用 JSON と裸の URL を表示用の文字列へ置換します。明示的なリンクの Markdown 記法はそのまま保持します。添付・引用 ID は出現順・重複・spoiler 内を含み、コードや数式内の文字列は対象になりません。ユーザー情報の解決や通知送信は含みません。
 
 JSON 設定や Wasm のリソース管理は SDK 接続層の責務です。
+`references.embeddings` は認識した参照・埋め込みの `raw` / `type` / `id` を AST の出現順に返します。Bot イベントはこの結果を再利用でき、ID の UUID 検証前の文字列も保持されます。
