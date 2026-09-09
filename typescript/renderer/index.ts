@@ -20,93 +20,107 @@ export type Options = CommonOptions & GenericOptions & TrapOptions;
 const highlight = createHighlightFunc("traq-code traq-lang");
 
 const validateImage = (value: string) => {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" && imageDomains.includes(url.hostname);
-  } catch {
-    return false;
-  }
+    try {
+        const url = new URL(value);
+        return url.protocol === "https:" && imageDomains.includes(url.hostname);
+    } catch {
+        return false;
+    }
 };
 
 function condensedOptions(options: Options) {
-  const customMath = options.math;
+    const customMath = options.math;
 
-  return {
-    ...options,
-    math: customMath
-      ? (tex: string) => customMath(tex, false)
-      : (tex: string) =>
-          math(tex, false, {
-            maxSize: 1,
-            macros: {
-              "\\Huge": "",
-              "\\huge": "",
-              "\\LARGE": "",
-              "\\Large": "",
-              "\\large": "",
-            },
-          }),
-  };
+    return {
+        ...options,
+        math: customMath
+            ? (tex: string) => customMath(tex, false)
+            : (tex: string) =>
+                  math(tex, false, {
+                      maxSize: 1,
+                      macros: {
+                          "\\Huge": "",
+                          "\\huge": "",
+                          "\\LARGE": "",
+                          "\\Large": "",
+                          "\\large": "",
+                      },
+                  }),
+    };
 }
 
 function build(options: Options = {}, condensed = false) {
-  const commonPlugin = common({
-    breaks: true,
-    highlight,
-    validateImage,
-    linkAttributes: { target: "_blank", rel: "nofollow noopener noreferrer" },
-    ...options,
-  });
-  const genericPlugin = generic(condensed ? condensedOptions(options) : options);
+    const commonPlugin = common({
+        breaks: true,
+        highlight,
+        validateImage,
+        linkAttributes: {
+            target: "_blank",
+            rel: "nofollow noopener noreferrer",
+        },
+        ...options,
+    });
 
-  const trapPlugin = trap(options);
+    const genericPlugin = generic(
+        condensed ? condensedOptions(options) : options,
+    );
 
-  if (condensed)
-    configureCondensed(commonPlugin, genericPlugin, trapPlugin, options);
+    const trapPlugin = trap(options);
 
-  return new PresetBuilder()
-    .add(commonPlugin)
-    .add(genericPlugin)
-    .add(trapPlugin)
-    .build();
+    if (condensed) {
+        configureCondensed(commonPlugin, genericPlugin, trapPlugin, options);
+    }
+
+    return new PresetBuilder()
+        .add(commonPlugin)
+        .add(genericPlugin)
+        .add(trapPlugin)
+        .build();
 }
 
 export function html(options?: Options) {
-  return build(options);
+    return build(options);
 }
 
 /** Build standard and condensed message renderers from the same options. */
 export function messageRenderers({
-  origin,
-  ...options
+    origin,
+    ...options
 }: Options & { origin: string }) {
-  const embeddingOrigin = new URL(origin).origin;
+    const embeddingOrigin = new URL(origin).origin;
 
-  function create(condensed: boolean) {
-    const view = renderer(build(options, condensed));
+    function create(condensed: boolean) {
+        const view = renderer(build(options, condensed));
+
+        return Object.freeze({
+            render(document: Document) {
+                const prepared = prepareMessage(
+                    document,
+                    embeddingOrigin,
+                    condensed,
+                );
+                const renderedText = condensed
+                    ? prepared.document.children
+                          .map((node) =>
+                              view.render({
+                                  ...prepared.document,
+                                  children: [node],
+                              }),
+                          )
+                          .join(" ")
+                    : view.render(prepared.document);
+
+                return {
+                    rawText: document.source,
+                    renderedText,
+                    embeddings: prepared.embeddings,
+                };
+            },
+        });
+    }
 
     return Object.freeze({
-      render(document: Document) {
-        const prepared = prepareMessage(document, embeddingOrigin, condensed);
-        const renderedText = condensed
-          ? prepared.document.children
-              .map((node) =>
-                view.render({ ...prepared.document, children: [node] }),
-              )
-              .join(" ")
-          : view.render(prepared.document);
-
-        return {
-          rawText: document.source,
-          renderedText,
-          embeddings: prepared.embeddings,
-        };
-      },
+        standard: create(false),
+        condensed: create(true),
     });
-  }
-
-  return Object.freeze({
-    standard: create(false),
-    condensed: create(true),
-  });
 }

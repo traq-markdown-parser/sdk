@@ -46,6 +46,7 @@ func EmbedReferences(
 		result.WriteString(source[position:start])
 		result.WriteByte('!')
 		result.Write(encoded)
+
 		position = end
 	}
 

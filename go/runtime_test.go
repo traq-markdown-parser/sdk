@@ -16,19 +16,23 @@ func TestRuntimeOwnership(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	runtime, err := NewRuntime(ctx, wasm)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer runtime.Close(ctx)
+
 	traq, err := runtime.NewParser(ctx, PresetTraQV1)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	common, err := runtime.NewParser(ctx, PresetCommonMark)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	for parser, kind := range map[*Parser]string{
 		traq:   trap.StampName,
 		common: commonmark.TextName,
@@ -41,11 +45,13 @@ func TestRuntimeOwnership(t *testing.T) {
 			t.Fatal("parser grammars were shared")
 		}
 	}
+
 	if _, err := runtime.NewParser(ctx, Preset("missing")); err == nil {
 		t.Fatal("accepted invalid preset")
 	}
 	canceled, cancel := context.WithCancel(ctx)
 	cancel()
+
 	if parser, err := runtime.NewParser(canceled, PresetTraQV1); err == nil {
 		parser.Close(ctx)
 		t.Fatal("accepted canceled creation")
@@ -56,6 +62,7 @@ func TestRuntimeOwnership(t *testing.T) {
 	if _, err := common.Parse(ctx, "still open"); err != nil {
 		t.Fatal(err)
 	}
+
 	// Creation and parsing share only the compiled module, including after a failure or Close.
 	var wg sync.WaitGroup
 	for i := 0; i < 4; i++ {
@@ -73,7 +80,9 @@ func TestRuntimeOwnership(t *testing.T) {
 			}
 		}()
 	}
+
 	wg.Wait()
+
 	if err := runtime.Close(ctx); err != nil {
 		t.Fatal(err)
 	}

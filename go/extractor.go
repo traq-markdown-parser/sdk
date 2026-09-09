@@ -19,10 +19,12 @@ func (r *Runtime) NewExtractor(
 	if err != nil {
 		return nil, err
 	}
+
 	instance, err := r.runtime.NewInstance(ctx, "configure_extractor", string(config))
 	if err != nil {
 		return nil, err
 	}
+
 	return &Extractor{instance: instance}, nil
 }
 
@@ -31,13 +33,16 @@ func (p *Extractor) Extract(ctx context.Context, document *Document) (*Extractio
 	if err != nil {
 		return nil, err
 	}
+
 	raw, err := p.instance.Call(ctx, "extract", string(input))
 	if err != nil {
 		return nil, err
 	}
+
 	var result Extraction
 	if err := json.Unmarshal(raw, &result); err != nil {
 		return nil, err
 	}
+
 	return &result, nil
 }
