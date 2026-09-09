@@ -79,7 +79,7 @@ core の `/renderer` は受け取った Document から HTML を作ります。�
 
 `crates/processor` composes the Rust parser, notification renderer and reference extractor. `Processor::process` parses once and lends the same native Document to both consumers; it does not depend on the AST codec. The reusable renderer and extractor implementations remain in core/commonmark/trap-extension, independent of this distribution and its transport.
 
-Wasm additionally exports `configure_processor` and `process`. Configuration selects a Rust `ProcessorPreset` and `ProcessorOptions`; processing accepts the original UTF-8 source and returns `{result: ProcessOutput}` or `{error: string}`. No AST is serialized in this path. Processing errors currently carry a message, without a stable machine-readable classification. Applications must not classify those errors by matching their text.
+Wasm additionally exports `configure_processor` and `process`. Configuration supplies a grammar version string and `ProcessorOptions`; the Rust distribution resolves the version to a Grammar and constructs the parser; processing accepts the original UTF-8 source and returns `{result: ProcessOutput}` or `{error: string}`. No AST is serialized in this path. Processing errors currently carry a message, without a stable machine-readable classification. Applications must not classify those errors by matching their text.
 
 The generated result contains `notificationText` and `references.{mentions,groupMentions,channelLinks}`. Go generates named nested structures and arrays from schemars; TypeScript declarations come from ts-rs. New processing options, output fields and preset variants are generated without modifying host transports. Unsupported schema constraints fail generation.
 

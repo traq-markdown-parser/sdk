@@ -15,7 +15,7 @@ import {
   escapeHtml,
 } from "@traq-markdown-parser/core/html";
 import { validateLink as defaultPolicy } from "@traq-markdown-parser/commonmark/policy";
-import type { Options } from "./v1.js";
+import type { Options } from "./index.js";
 
 const blocks = (nodes: Node[] | undefined, ctx: RenderContext) =>
   (nodes ?? []).map((node) => ctx.inline([node])).join(" ");

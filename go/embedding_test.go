@@ -20,7 +20,7 @@ func TestEmbeddingFixtures(t *testing.T) {
 	}
 	defer runtime.Close(ctx)
 
-	processor, err := runtime.NewProcessor(ctx, ProcessorPresetTraQV1, ProcessorOptions{})
+	processor, err := runtime.NewProcessor(ctx, PresetTraQV1, ProcessorOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}

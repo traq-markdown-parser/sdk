@@ -1,11 +1,8 @@
 import type {
-  ProcessorPreset,
   ProcessorOptions,
   ProcessOutput,
 } from "./generated/processing.js";
-export { processors } from "./generated/processing.js";
 export type {
-  ProcessorPreset,
   ProcessorOptions,
   ProcessOutput,
   References,
@@ -16,10 +13,9 @@ export type {
 } from "./generated/processing.js";
 import { buildId, inputBytes } from "./generated/artifact.js";
 import type { Document } from "./generated/nodes.js";
-import type { Preset } from "./generated/presets.js";
+export type { Preset } from "./generated/presets.js";
 export { presets } from "./generated/presets.js";
 export { isKnownNode } from "./generated/nodes.js";
-export type { Preset } from "./generated/presets.js";
 export type {
   Document,
   Node,
@@ -48,11 +44,8 @@ export interface Processor {
 }
 
 export interface Runtime {
-  createParser(preset: Preset): Parser;
-  createProcessor(
-    preset: ProcessorPreset,
-    options: ProcessorOptions,
-  ): Processor;
+  createParser(preset: string): Parser;
+  createProcessor(preset: string, options: ProcessorOptions): Processor;
   dispose(): void;
 }
 
@@ -63,7 +56,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
   );
   const instances = new Set<{ dispose(): void }>();
   return Object.freeze({
-    createParser(preset: Preset): Parser {
+    createParser(preset: string): Parser {
       const instance = instantiate("configure", preset);
       return Object.freeze({
         parse: (source: string) => instance.call<Document>("parse", source),
@@ -73,10 +66,7 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
       });
     },
 
-    createProcessor(
-      preset: ProcessorPreset,
-      options: ProcessorOptions,
-    ): Processor {
+    createProcessor(preset: string, options: ProcessorOptions): Processor {
       const instance = instantiate(
         "configure_processor",
         JSON.stringify({ preset, options }),
@@ -90,7 +80,9 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
 
     dispose() {
       module = undefined;
-      for (const instance of instances) instance.dispose();
+      for (const instance of instances) {
+        instance.dispose();
+      }
     },
   });
 
@@ -98,7 +90,9 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
     configuration: "configure" | "configure_processor",
     config: string,
   ) {
-    if (!module) throw new Error("Runtime is disposed");
+    if (!module) {
+      throw new Error("Runtime is disposed");
+    }
     let wasm: Wasm | undefined = new WebAssembly.Instance(module, {})
       .exports as Wasm;
     const encoder = new TextEncoder(),
@@ -109,19 +103,27 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
       source: string,
       mode = 0,
     ): T {
-      if (!wasm) throw new Error("Instance is disposed");
-      if (typeof source !== "string")
+      if (!wasm) {
+        throw new Error("Instance is disposed");
+      }
+      if (typeof source !== "string") {
         throw new TypeError("Expected source string");
-      if (source.length > inputBytes)
+      }
+      if (source.length > inputBytes) {
         throw new RangeError("Wasm input limit exceeded");
+      }
       const input = encoder.encode(source);
-      if (input.length > inputBytes)
+      if (input.length > inputBytes) {
         throw new RangeError("Wasm input limit exceeded");
-      if (decoder.decode(input) !== source)
+      }
+      if (decoder.decode(input) !== source) {
         throw new TypeError("Source contains an unpaired surrogate");
+      }
 
       const pointer = wasm.input_ptr(input.length);
-      if (!pointer) throw new RangeError("Wasm input limit exceeded");
+      if (!pointer) {
+        throw new RangeError("Wasm input limit exceeded");
+      }
 
       let result: {
         document?: unknown;
@@ -143,12 +145,14 @@ export async function createRuntime(bytes: Uint8Array): Promise<Runtime> {
       }
 
       // Rust validates the AST before encoding; the build ID pairs its types.
-      if (result.error)
+      if (result.error) {
         throw new Error("Markdown: " + JSON.stringify(result.error), {
           cause: result.error,
         });
-      if (operation.startsWith("configure") && result.configured !== buildId)
+      }
+      if (operation.startsWith("configure") && result.configured !== buildId) {
         throw new Error("Wasm does not match this SDK build");
+      }
       return (result.result ?? result.document) as T;
     }
     call(configuration, config);

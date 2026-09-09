@@ -1,8 +1,8 @@
-use traq_markdown_processor::{Processor, ProcessorOptions, ProcessorPreset};
+use traq_markdown_processor::{Processor, ProcessorOptions};
 
 fn processor(origin: &str) -> Processor {
     Processor::new(
-        ProcessorPreset::TraQV1,
+        traq_markdown_grammar::bindings::parser("traq.v1").unwrap(),
         ProcessorOptions {
             origin: origin.into(),
         },
@@ -64,7 +64,7 @@ fn origin_options_are_validated_and_isolated() {
     );
     assert!(
         Processor::new(
-            ProcessorPreset::TraQV1,
+            traq_markdown_grammar::bindings::parser("traq.v1").unwrap(),
             ProcessorOptions {
                 origin: "x".repeat(2049)
             }
@@ -103,4 +103,33 @@ fn message_metadata_keeps_unknown_or_invalid_embeddings_literal() {
     assert_eq!(result.notification_text, source);
     assert!(result.attachments.is_empty());
     assert!(result.citations.is_empty());
+}
+
+#[test]
+fn selected_grammar_drives_the_same_processing_pipeline() {
+    let processors: std::collections::BTreeMap<_, _> = ["commonmark", "traq.v1"]
+        .into_iter()
+        .map(|version| {
+            let parser = traq_markdown_grammar::bindings::parser(version).unwrap();
+            let processor = Processor::new(parser, ProcessorOptions::default()).unwrap();
+            (version, processor)
+        })
+        .collect();
+    let source = "!!secret!!";
+    for _ in 0..2 {
+        assert_eq!(
+            processors["commonmark"]
+                .process(source)
+                .unwrap()
+                .notification_text,
+            source
+        );
+        assert_eq!(
+            processors["traq.v1"]
+                .process(source)
+                .unwrap()
+                .notification_text,
+            "██████"
+        );
+    }
 }

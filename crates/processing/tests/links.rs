@@ -1,5 +1,5 @@
 use markdown_renderer::Renderer;
-use traq_markdown_processing::presets::traq::v1::notification;
+use traq_markdown_processing::presets::traq::notification;
 
 const ID: &str = "00000000-0000-0000-0000-000000000001";
 

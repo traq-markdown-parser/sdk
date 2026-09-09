@@ -1,1 +1,6 @@
-pub mod v1;
+pub mod notification;
+pub mod references;
+
+pub mod message;
+
+pub mod embedding;

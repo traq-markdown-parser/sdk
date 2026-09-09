@@ -74,7 +74,47 @@ document, err := parser.Parse(ctx, "**hello** :stamp:")
 
 ## 文法の変更
 
-TypeScript の `presets.commonmark` / `presets.traq.v1`、Go の `PresetCommonMark` / `PresetTraQV1` は Rust が公開するプリセットから生成します。独自の文法は Rust で組み立て、配布層からプリセットとして公開して再ビルドします。ホスト API はプリセットの選択、解析、解放に絞っています。
+文法バージョンは、本文がどの構文規則で書かれたかを示す永続的な識別子です。
+パッケージのバージョンとは独立しており、パッケージを更新しても既存の識別子の意味を変えません。
+processing・renderer には独立した文法バージョンを設けず、選択された文法が生成した AST を処理します。
+
+文法のレジストリは Rust の `bindings::grammars()` にあります。
+`bindings::parser(version)` が名前から Grammar を選び、Parser を生成します。
+Go / TypeScript には文法構成を複製せず、Wasm 境界では文法バージョンの文字列を渡します。
+`presets.traq.v1` / `PresetTraQV1` はその文字列を表す生成済み定数です。
+Rust の配布層がバージョンを解決し、共通のパーサー生成や処理機構は文法バージョンを知りません。
+
+TypeScript の `runtime.createParser(version)` / `runtime.createProcessor(version, options)`、
+Go の `NewParser(ctx, Preset(version))` / `NewProcessor(ctx, Preset(version), options)` に
+DB から読み出したバージョンを指定できます。未知のバージョンはエラーになり、最新文法への暗黙の置き換えはしません。
+同じ Runtime から作成したパーサーを `Map<string, Parser>` に保持して使い分けられます。
+
+```ts
+import type { Parser } from '@traq-markdown-parser/traq'
+
+const parsers = new Map<string, Parser>()
+for (const message of messages) {
+  let parser = parsers.get(message.grammarVersion)
+  if (!parser) {
+    parser = runtime.createParser(message.grammarVersion)
+    parsers.set(message.grammarVersion, parser)
+  }
+  const document = parser.parse(message.text)
+  const result = view.render(document)
+}
+```
+
+DB に保存するのは永続的な文法バージョンです。SDK と Wasm の対応を確認するビルド ID は
+保存用バージョンではなく、パッケージ更新後も同じ文法バージョンで旧文法を選択できます。
+
+新しい文法は Rust の文法定義と `crates/grammar/src/presets/exports.rs` の公開カタログに追加します。
+選択レジストリと Go / TypeScript の定数はこのカタログを使うため、言語ごとの分岐や processing / renderer のバージョン追加は不要です。
+既存文法の共有ルールを変更するときは、旧文法の解釈を維持してください。解釈を変えるルールだけを分離し、
+旧実装を旧文法に残します。変更のないルールや AST の処理コードを文法ごとに複製する必要はありません。
+既存の v1 AST fixture は互換性検証に使い、文法を更新する目的で期待値を上書きしません。
+
+
+TypeScript の `presets.commonmark` / `presets.traq.v1`、Go の `PresetCommonMark` / `PresetTraQV1` は Rust が公開するプリセットから生成します。独自の文法は Rust で組み立て、配布層からプリセットとして公開して再ビルドします。ホスト API は文法からのパーサー生成、解析、解放を提供します。
 
 Wasm のホスト実装は TypeScript の `index.ts` と Go の `parser.go` です。共通 AST 型と payload guard の検証部品は core、構文の生成型はそれぞれのリポジトリが所有します。文法ビルダー、Plugin / Rule のミラー、文法ハンドル、worker pool は持ちません。
 
@@ -87,11 +127,11 @@ HTML 描画の共通基盤は core、構文別の描画は commonmark と trap-e
 `Processor` は原文を一度だけ Rust AST に解析し、その AST を通知用レンダラーと参照抽出器が借用します。ホストとの間では最終結果だけを渡します。
 
 ```ts
-import { createRuntime, processors } from '@traq-markdown-parser/traq'
+import { createRuntime, presets } from '@traq-markdown-parser/traq'
 
 const runtime = await createRuntime(wasmBytes)
 try {
-  const processor = runtime.createProcessor(processors.traq.v1, {
+  const processor = runtime.createProcessor(presets.traq.v1, {
     origin: 'https://q.example.test',
   })
   const { notificationText, references } = processor.process('**hello** !!secret!!')
@@ -103,7 +143,7 @@ try {
 ```
 
 ```go
-processor, err := runtime.NewProcessor(ctx, markdown.ProcessorPresetTraQV1,
+processor, err := runtime.NewProcessor(ctx, markdown.PresetTraQV1,
     markdown.ProcessorOptions{Origin: "https://q.example.test"})
 if err != nil { return err }
 defer processor.Close(ctx)
@@ -129,13 +169,13 @@ TypeScript の実装は各リポジトリの責務に合わせて配置してい
 
 AST の共通形は core の `typescript/ast.ts` に一度だけ定義し、traq の生成 bindings はそれを構文の union で特殊化します。構文の payload は Rust を正として生成し、commonmark と trap-extension の `npm run generate:bindings` でそれぞれの契約 crate から再生成できます。
 
-HTML API は `/renderer` サブパスです。traQ は `@traq-markdown-parser/traq/renderer/v1` の `messageRenderer`、CSS は `@traq-markdown-parser/traq/index.css` を利用します。
+HTML API は `/renderer` サブパスです。traQ は `@traq-markdown-parser/traq/renderer` の `messageRenderer`、CSS は `@traq-markdown-parser/traq/index.css` を利用します。
 
 ### HTML の利用例
 
 ```ts
 import { createRuntime, presets } from "@traq-markdown-parser/traq";
-import { messageRenderer } from "@traq-markdown-parser/traq/renderer/v1";
+import { messageRenderer } from "@traq-markdown-parser/traq/renderer";
 import "@traq-markdown-parser/traq/index.css";
 
 const runtime = await createRuntime(wasmBytes);

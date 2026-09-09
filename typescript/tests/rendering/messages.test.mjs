@@ -4,7 +4,7 @@ import {
   messageRenderer,
   embeddingFromUrl,
   endsWithEmbedding
-} from '@traq-markdown-parser/traq/renderer/v1'
+} from '@traq-markdown-parser/traq/renderer'
 import { parser, commonParser } from './setup.mjs'
 
 const origin = 'https://q.example.test',

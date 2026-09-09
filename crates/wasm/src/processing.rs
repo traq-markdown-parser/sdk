@@ -1,14 +1,14 @@
 use crate::buffers::IO;
 use serde::Deserialize;
 use std::cell::RefCell;
-use traq_markdown_processor::{Processor, ProcessorOptions, ProcessorPreset};
+use traq_markdown_processor::{Processor, ProcessorOptions};
 
 thread_local! { static PROCESSOR: RefCell<Option<Processor>> = const { RefCell::new(None) }; }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Configuration {
-    preset: ProcessorPreset,
+    preset: String,
     options: ProcessorOptions,
 }
 
@@ -19,7 +19,9 @@ pub extern "C" fn configure_processor() -> u32 {
             let source = io.source().map_err(|error| error.to_string())?;
             let config: Configuration =
                 serde_json::from_str(source).map_err(|error| error.to_string())?;
-            let processor = Processor::new(config.preset, config.options)?;
+            let parser = traq_markdown_grammar::bindings::parser(&config.preset)
+                .map_err(|error| error.to_string())?;
+            let processor = Processor::new(parser, config.options)?;
             PROCESSOR.set(Some(processor));
             Ok(env!("MARKDOWN_BUILD_ID"))
         })();

@@ -5,14 +5,7 @@ use markdown_extractor::Extractor;
 use markdown_renderer::Renderer;
 use serde::{Deserialize, Serialize};
 use traq_markdown_grammar::Parser;
-use traq_markdown_processing::{References, presets::traq::v1};
-
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
-#[cfg_attr(feature = "contracts", derive(ts_rs::TS, schemars::JsonSchema))]
-pub enum ProcessorPreset {
-    #[serde(rename = "traq.v1")]
-    TraQV1,
-}
+use traq_markdown_processing::{References, presets::traq};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "contracts", derive(ts_rs::TS, schemars::JsonSchema))]
@@ -32,7 +25,7 @@ pub struct ProcessOutput {
     pub attachments: Vec<String>,
     pub citations: Vec<String>,
     pub references: References,
-    pub embedding: v1::embedding::EmbeddingPlan,
+    pub embedding: traq::embedding::EmbeddingPlan,
 }
 
 /// Owns the Rust implementations, without external document handles or AST copies.
@@ -40,19 +33,17 @@ pub struct Processor {
     parser: Parser,
     renderer: Renderer,
     extractor: Extractor<References>,
-    message: v1::message::Processor,
+    message: traq::message::Processor,
 }
 
 impl Processor {
-    pub fn new(preset: ProcessorPreset, options: ProcessorOptions) -> Result<Self, &'static str> {
-        match preset {
-            ProcessorPreset::TraQV1 => Ok(Self {
-                parser: traq_markdown_grammar::presets::traq::v1::parser(),
-                renderer: Renderer::new(&v1::notification::preset(&options.origin)?),
-                extractor: Extractor::new(&v1::references::preset()?),
-                message: v1::message::Processor::new(&options.origin),
-            }),
-        }
+    pub fn new(parser: Parser, options: ProcessorOptions) -> Result<Self, &'static str> {
+        Ok(Self {
+            parser,
+            renderer: Renderer::new(&traq::notification::preset(&options.origin)?),
+            extractor: Extractor::new(&traq::references::preset()?),
+            message: traq::message::Processor::new(&options.origin),
+        })
     }
 
     pub fn process(&self, source: &str) -> Result<ProcessOutput, String> {
@@ -76,7 +67,7 @@ impl Processor {
             attachments: message.attachments,
             citations: message.citations,
             references,
-            embedding: v1::embedding::plan(&document).map_err(str::to_owned)?,
+            embedding: traq::embedding::plan(&document).map_err(str::to_owned)?,
         })
     }
 }

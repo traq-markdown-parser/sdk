@@ -1,23 +1,18 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { goContract } from "@traq-markdown-parser/core/codegen/go";
-import { presetFiles } from "./presets.mjs";
 
 export async function processingFiles(schemas, input) {
-  const tree = {};
-  for (const name of schemas.ProcessorPreset.enum) {
-    const parts = name.split(".");
-    let target = tree;
-    for (const part of parts.slice(0, -1)) target = target[part] ??= {};
-    target[parts.at(-1)] = 0;
-  }
-
-  const files = presetFiles(
-    tree,
-    "ProcessorPreset",
-    "processors",
-    "processing",
-  );
+  const files = new Map([
+    [
+      "typescript/generated/processing.ts",
+      "// Generated from Rust processing contracts. Do not edit.\n",
+    ],
+    [
+      "go/processing_generated.go",
+      "// Code generated from Rust processing contracts. DO NOT EDIT.\npackage markdown\n",
+    ],
+  ]);
   const types = new Map();
   async function declaration(name) {
     if (types.has(name)) return;
@@ -55,8 +50,8 @@ export async function processingFiles(schemas, input) {
     for (const [name, definition] of Object.entries(schema.$defs ?? {}))
       addGo({ ...definition, title: name }, schema);
   }
-  const tsPath = "typescript/generated/processing.ts",
-    goPath = "go/processing_generated.go";
+  const tsPath = "typescript/generated/processing.ts";
+  const goPath = "go/processing_generated.go";
   files.set(tsPath, files.get(tsPath) + [...types.values()].join("\n") + "\n");
   files.set(goPath, files.get(goPath) + go);
   return files;

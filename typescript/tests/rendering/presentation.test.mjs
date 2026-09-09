@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { renderer } from '@traq-markdown-parser/core/renderer'
-import { v1 } from '@traq-markdown-parser/traq/renderer'
+import * as rendering from '@traq-markdown-parser/traq/renderer'
 import { parser, commonParser } from './setup.mjs'
 
 test('traQ presentation combines tables, marks, spoilers, math, and highlighted code', () => {
-  const view = renderer(v1.html())
+  const view = renderer(rendering.html())
   const source =
     '| left | right |\n| :--- | ---: |\n| **a** | b |\n\n==mark== ~~strike~~ !!secret!! $x$\n\n```js:caption\nconst x = 1\n```'
   const html = view.render(parser.parse(source))
@@ -33,7 +33,7 @@ test('traQ presentation combines tables, marks, spoilers, math, and highlighted 
 test('stamp stores are isolated and unrecognized effects preserve escaped source', () => {
   const make = origin =>
     renderer(
-      v1.html({
+      rendering.html({
         store: {
           getStampByName: name =>
             name === 'wave' ? { name, fileId: 'stamp' } : undefined,
@@ -56,7 +56,7 @@ test('stamp stores are isolated and unrecognized effects preserve escaped source
   )
   assert.equal(first.renderInline(parser.parseInline(':missing:')), ':missing:')
   const unsafe = renderer(
-    v1.html({
+    rendering.html({
       store: {
         getStampByName: () => ({ name: 'wave', fileId: 'id' }),
         generateStampHref: () => 'javascript:alert(1)'
@@ -70,7 +70,7 @@ test('reference highlighting and link/image policies belong to each renderer', t
   const common = commonParser()
   t.after(() => common.dispose())
   const view = renderer(
-    v1.html({
+    rendering.html({
       store: {
         getMe: () => ({ id: 'me' }),
         getUserGroup: () => ({ members: [{ id: 'me' }] }),
@@ -97,7 +97,7 @@ test('reference highlighting and link/image policies belong to each renderer', t
     /<img/
   )
   const custom = renderer(
-    v1.html({ validateImage: () => true, validateLink: () => false })
+    rendering.html({ validateImage: () => true, validateLink: () => false })
   )
   assert.match(
     custom.renderInline(
@@ -112,7 +112,7 @@ test('reference highlighting and link/image policies belong to each renderer', t
 })
 
 test('table handlers reject forged row and cell payloads', () => {
-  const view = renderer(v1.html())
+  const view = renderer(rendering.html())
   const document = parser.parse('| a |\n| - |\n| b |')
   const cell = document.children[0].children[0].children[0]
   cell.data.alignment = 'left;position:fixed'

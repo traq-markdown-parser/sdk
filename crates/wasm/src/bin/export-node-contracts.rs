@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )*
         };
     }
-    processing_type!(ProcessorPreset, ProcessorOptions, ProcessOutput);
+    processing_type!(ProcessorOptions, ProcessOutput);
 
     // Check that metadata and codec registrations agree before writing bindings.
     let _ = nodes::codec();

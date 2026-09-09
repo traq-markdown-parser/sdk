@@ -82,7 +82,7 @@ func main() {
 	runtime, err := markdown.NewRuntime(context.Background(), wasm)
 	must(err)
 	defer runtime.Close(context.Background())
-	processor, err := runtime.NewProcessor(context.Background(), markdown.ProcessorPresetTraQV1, markdown.ProcessorOptions{Origin: conf.Origin})
+	processor, err := runtime.NewProcessor(context.Background(), markdown.PresetTraQV1, markdown.ProcessorOptions{Origin: conf.Origin})
 	must(err)
 	initMs := float64(time.Since(initStart).Nanoseconds()) / 1e6
 	input, err := os.Open(*corpus)

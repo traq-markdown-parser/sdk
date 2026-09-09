@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { renderer } from '@traq-markdown-parser/core/renderer'
-import { v1 } from '@traq-markdown-parser/traq/renderer'
+import * as rendering from '@traq-markdown-parser/traq/renderer'
 import { parser } from './setup.mjs'
 
 const fixtures = JSON.parse(
@@ -12,7 +12,7 @@ const fixtures = JSON.parse(
   )
 )
 
-const view = renderer(v1.html())
+const view = renderer(rendering.html())
 
 for (const { name, markdown, html } of fixtures)
   test('corpus regression: ' + name, () => {

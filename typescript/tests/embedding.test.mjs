@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   createRuntime,
-  processors,
+  presets,
   embedReferences,
   mentionsUser,
 } from "../../dist/index.js";
@@ -37,7 +37,7 @@ const identities = {
 
 test("embedding and restoration use Rust AST ranges without reparsing source text", async () => {
   const runtime = await createRuntime(bytes);
-  const processor = runtime.createProcessor(processors.traq.v1, { origin: "" });
+  const processor = runtime.createProcessor(presets.traq.v1, { origin: "" });
   const embed = (source) =>
     embedReferences(
       source,

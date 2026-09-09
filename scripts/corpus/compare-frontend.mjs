@@ -27,7 +27,7 @@ const { createRuntime, presets } = await import(
   pathToFileURL(sdkPath + "/dist/index.js")
 );
 const { messageRenderer } = await import(
-  pathToFileURL(frontendPath + "/dist/renderer/v1.js")
+  pathToFileURL(frontendPath + "/dist/renderer/index.js")
 );
 const origin = values.origin;
 const store = {

@@ -24,13 +24,13 @@ func TestProcessing(t *testing.T) {
 	defer runtime.Close(ctx)
 	processor, err := runtime.NewProcessor(
 		ctx,
-		ProcessorPresetTraQV1,
+		PresetTraQV1,
 		ProcessorOptions{Origin: "https://q.example.test"},
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plain, err := runtime.NewProcessor(ctx, ProcessorPresetTraQV1, ProcessorOptions{})
+	plain, err := runtime.NewProcessor(ctx, PresetTraQV1, ProcessorOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,12 +73,12 @@ func TestProcessing(t *testing.T) {
 	if err != nil || output.NotificationText != url {
 		t.Fatalf("%+v %v", output, err)
 	}
-	if _, err := runtime.NewProcessor(ctx, ProcessorPreset("missing"), ProcessorOptions{}); err == nil {
+	if _, err := runtime.NewProcessor(ctx, Preset("missing"), ProcessorOptions{}); err == nil {
 		t.Fatal("accepted missing preset")
 	}
 	if _, err := runtime.NewProcessor(
 		ctx,
-		ProcessorPresetTraQV1,
+		PresetTraQV1,
 		ProcessorOptions{Origin: strings.Repeat("x", 2049)},
 	); err == nil {
 		t.Fatal("accepted oversized origin")
@@ -137,10 +137,44 @@ func TestProcessing(t *testing.T) {
 	if _, err := plain.Process(ctx, "closed"); err == nil {
 		t.Fatal("Runtime.Close left a processor open")
 	}
-	if _, err := runtime.NewProcessor(ctx, ProcessorPresetTraQV1, ProcessorOptions{}); err == nil {
+	if _, err := runtime.NewProcessor(ctx, PresetTraQV1, ProcessorOptions{}); err == nil {
 		t.Fatal("closed runtime accepted creation")
 	}
 	if !reflect.DeepEqual(result.References.Mentions, []string{id, id}) {
 		t.Fatal("results alias Wasm memory")
+	}
+}
+
+func TestStoredGrammarSelection(t *testing.T) {
+	ctx := context.Background()
+	wasm, err := os.ReadFile("../dist/parser.wasm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtime, err := NewRuntime(ctx, wasm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer runtime.Close(ctx)
+	processors := make(map[string]*Processor)
+	for _, version := range []string{"commonmark", "traq.v1"} {
+		processor, err := runtime.NewProcessor(ctx, Preset(version), ProcessorOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		processors[version] = processor
+	}
+	for _, version := range []string{"commonmark", "traq.v1", "commonmark"} {
+		output, err := processors[version].Process(ctx, "!!secret!!")
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected := "!!secret!!"
+		if version == "traq.v1" {
+			expected = "██████"
+		}
+		if output.NotificationText != expected {
+			t.Fatalf("%s: got %q, want %q", version, output.NotificationText, expected)
+		}
 	}
 }

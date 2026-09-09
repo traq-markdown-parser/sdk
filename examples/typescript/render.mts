@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { createRuntime, presets } from '@traq-markdown-parser/traq'
 import { renderer } from '@traq-markdown-parser/core/renderer'
-import { v1 } from '@traq-markdown-parser/traq/renderer'
+import * as rendering from '@traq-markdown-parser/traq/renderer'
 
 const runtime = await createRuntime(
   await readFile(
@@ -10,7 +10,7 @@ const runtime = await createRuntime(
 )
 try {
   const parser = runtime.createParser(presets.traq.v1)
-  const view = renderer(v1.html())
+  const view = renderer(rendering.html())
   console.log(
     view.render(
       parser.parse('**Hello** ==Markdown== $x^2$ !!secret!! :0xff0000:')

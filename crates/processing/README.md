@@ -6,10 +6,10 @@
 ```rust
 use markdown_extractor::Extractor;
 use markdown_renderer::Renderer;
-use traq_markdown_processing::presets::traq::v1;
+use traq_markdown_processing::presets::traq;
 
-let renderer = Renderer::new(&v1::notification::preset("https://q.example.test")?);
-let extractor = Extractor::new(&v1::references::preset()?);
+let renderer = Renderer::new(&traq::notification::preset("https://q.example.test")?);
+let extractor = Extractor::new(&traq::references::preset()?);
 // parser が生成した同じ Document を借用する。
 let text = renderer.render(&document)?;
 let references = extractor.extract(&document)?;

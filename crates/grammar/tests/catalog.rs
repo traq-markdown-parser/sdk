@@ -39,3 +39,29 @@ fn bundled_compositions_preserve_presets_and_validate_untrusted_recipes() {
         assert!(catalog.build(&unknown).is_err());
     }
 }
+
+#[test]
+fn stored_grammar_names_select_independent_parsers_without_fallback() {
+    use traq_markdown_grammar::bindings;
+
+    let commonmark = bindings::parser("commonmark").unwrap();
+    let traq = bindings::parser("traq.v1").unwrap();
+    for _ in 0..2 {
+        let source = "!!secret!!";
+        assert_eq!(
+            commonmark.parse(source).unwrap(),
+            presets::commonmark::parser().parse(source).unwrap()
+        );
+        assert_eq!(
+            traq.parse(source).unwrap(),
+            presets::traq::v1::parser().parse(source).unwrap()
+        );
+        assert_ne!(
+            commonmark.parse(source).unwrap(),
+            traq.parse(source).unwrap()
+        );
+    }
+    for version in ["", "traq", "traq.v999", "traq.v1.extra"] {
+        assert!(bindings::parser(version).is_err());
+    }
+}

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { createRuntime, processors, presets } from "../../dist/index.js";
+import { createRuntime, presets } from "../../dist/index.js";
 const bytes = await readFile(
   new URL("../../dist/parser.wasm", import.meta.url),
 );
@@ -9,7 +9,7 @@ const bytes = await readFile(
 test("Rust processing preserves all 787 notification expectations", async (t) => {
   const runtime = await createRuntime(bytes);
   t.after(() => runtime.dispose());
-  const processor = runtime.createProcessor(processors.traq.v1, {
+  const processor = runtime.createProcessor(presets.traq.v1, {
     origin: "https://q.example.test",
   });
   const fixtures = JSON.parse(
@@ -39,9 +39,9 @@ test("processors share compilation with parsers and have independent configurati
   const runtime = await createRuntime(bytes);
   try {
     const options = { origin: "https://q.example.test" };
-    const first = runtime.createProcessor(processors.traq.v1, options);
+    const first = runtime.createProcessor(presets.traq.v1, options);
     options.origin = "changed";
-    const plain = runtime.createProcessor(processors.traq.v1, { origin: "" });
+    const plain = runtime.createProcessor(presets.traq.v1, { origin: "" });
     const parser = runtime.createParser(presets.traq.v1);
     const source =
       "https://q.example.test/files/00000000-0000-0000-0000-000000000001";
@@ -49,8 +49,8 @@ test("processors share compilation with parsers and have independent configurati
     assert.equal(plain.process(source).notificationText, source);
     for (const [preset, options] of [
       ["missing", { origin: "" }],
-      [processors.traq.v1, { origin: "x".repeat(2049) }],
-      [processors.traq.v1, { extra: true }],
+      [presets.traq.v1, { origin: "x".repeat(2049) }],
+      [presets.traq.v1, { extra: true }],
     ])
       assert.throws(() => runtime.createProcessor(preset, options));
     for (const source of [
@@ -66,7 +66,10 @@ test("processors share compilation with parsers and have independent configurati
       mentions: [id, id],
       groupMentions: [],
       channelLinks: [],
-      embeddings: [{raw:"@alice",type:"user",id}, {raw:"@alice",type:"user",id}],
+      embeddings: [
+        { raw: "@alice", type: "user", id },
+        { raw: "@alice", type: "user", id },
+      ],
     });
     assert.equal(result.notificationText, `@alice ██████ ${user}`);
     first.dispose();
@@ -79,11 +82,37 @@ test("processors share compilation with parsers and have independent configurati
     assert.throws(() => plain.process("closed"), /disposed/);
     assert.throws(() => parser.parse("closed"), /disposed/);
     assert.throws(
-      () => runtime.createProcessor(processors.traq.v1, { origin: "" }),
+      () => runtime.createProcessor(presets.traq.v1, { origin: "" }),
       /disposed/,
     );
     assert.deepEqual(result.references.mentions, [id, id]);
   } finally {
     runtime.dispose();
   }
+});
+
+test("stored grammar identifiers select independent processing instances", async (t) => {
+  const runtime = await createRuntime(bytes);
+  t.after(() => runtime.dispose());
+  const processors = new Map(
+    ["commonmark", "traq.v1"].map((version) => [
+      version,
+      runtime.createProcessor(version, { origin: "" }),
+    ]),
+  );
+  for (const version of ["commonmark", "traq.v1", "commonmark"]) {
+    const output = processors.get(version).process("!!secret!!");
+    assert.equal(
+      output.notificationText,
+      version === "commonmark" ? "!!secret!!" : "██████",
+    );
+  }
+  assert.throws(
+    () => runtime.createParser("traq.unknown"),
+    /unknown grammar version/,
+  );
+  assert.throws(
+    () => runtime.createProcessor("traq.unknown", { origin: "" }),
+    /unknown grammar version/,
+  );
 });

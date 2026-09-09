@@ -12,14 +12,14 @@ import {
   type RenderContext
 } from '@traq-markdown-parser/core/renderer'
 import { plugin } from '@traq-markdown-parser/commonmark/renderer'
-import { v1 } from '@traq-markdown-parser/traq/renderer'
+import * as rendering from '@traq-markdown-parser/traq/renderer'
 import type { Store } from '@traq-markdown-parser/trap-extension/renderer'
 
 const runtime = await createRuntime(new Uint8Array())
 const parser = runtime.createParser(presets.traq.v1)
-const view = renderer(v1.html())
+const view = renderer(rendering.html())
 const result: string = view.render(parser.parse('text'))
-const messageView = v1.messageRenderer({ origin: 'https://q.example.test' })
+const messageView = rendering.messageRenderer({ origin: 'https://q.example.test' })
 const messageHtml: string = messageView.render(
   parser.parse('text')
 ).renderedText
@@ -47,7 +47,7 @@ const store: Store = {
   getMe: () => ({ id: 'me' }),
   generateUserHref: id => '#' + id
 }
-renderer(v1.html({ store, math: tex => tex, highlight: code => code }))
+renderer(rendering.html({ store, math: tex => tex, highlight: code => code }))
 
 // @ts-expect-error handlers return HTML strings
 new Plugin(declaration).on('invalid', () => [])

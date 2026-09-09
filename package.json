@@ -18,10 +18,6 @@
       "types": "./dist/renderer/index.d.ts",
       "import": "./dist/renderer/index.js"
     },
-    "./renderer/v1": {
-      "types": "./dist/renderer/v1.d.ts",
-      "import": "./dist/renderer/v1.js"
-    },
     "./index.css": "./dist/index.css",
     "./styles/*": "./styles/*.scss"
   },

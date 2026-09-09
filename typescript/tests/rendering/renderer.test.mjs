@@ -126,7 +126,7 @@ test('fallback replacement keeps other extensions and does not require a store',
   )
   const source = '!{"type":"user","id":"u","raw":"@user"}'
   assert.equal(
-    html.renderer(traq.v1.html()).render(parser.parse(source)),
+    html.renderer(traq.html()).render(parser.parse(source)),
     '<p>@user</p>\n'
   )
 })
@@ -215,7 +215,7 @@ test('direct HTML rendering escapes attributes, image text, and fence info', t =
     view.render(parser.parse('```a\\+b&quot;\n<&\n```')),
     '<pre><code class="language-a+b&quot;">&lt;&amp;\n</code></pre>\n'
   )
-  const extended = html.renderer(traq.v1.html({ validateImage: () => true }))
+  const extended = html.renderer(traq.html({ validateImage: () => true }))
   assert.equal(
     extended.renderInline(parser.parseInline('![日本語](/image)')),
     '<img src="/image" alt="日本語">'

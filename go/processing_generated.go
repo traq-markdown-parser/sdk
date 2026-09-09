@@ -1,11 +1,5 @@
-// Code generated from Rust preset exports. DO NOT EDIT.
+// Code generated from Rust processing contracts. DO NOT EDIT.
 package markdown
-
-type ProcessorPreset string
-
-const (
-	ProcessorPresetTraQV1 ProcessorPreset = "traq.v1"
-)
 
 type ProcessorOptions struct {
 	Origin string `json:"origin"`

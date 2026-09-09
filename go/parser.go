@@ -42,7 +42,7 @@ func (r *Runtime) NewParser(ctx context.Context, preset Preset) (*Parser, error)
 
 func (r *Runtime) NewProcessor(
 	ctx context.Context,
-	preset ProcessorPreset,
+	preset Preset,
 	options ProcessorOptions,
 ) (*Processor, error) {
 	config, err := json.Marshal(map[string]any{"preset": preset, "options": options})
