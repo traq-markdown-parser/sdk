@@ -22,7 +22,8 @@
       "types": "./dist/renderer/v1.d.ts",
       "import": "./dist/renderer/v1.js"
     },
-    "./index.css": "./dist/index.css"
+    "./index.css": "./dist/index.css",
+    "./styles/*": "./styles/*.scss"
   },
   "files": [
     "dist/index.js",
@@ -33,7 +34,8 @@
     "THIRD_PARTY_NOTICES.md",
     "dist/renderer",
     "dist/index.css",
-    "LICENSE"
+    "LICENSE",
+    "styles"
   ],
   "engines": {
     "node": ">=24"
@@ -51,8 +53,12 @@
     "check:package": "node scripts/package-check.mjs",
     "check:architecture": "node scripts/check-js-boundaries.mjs",
     "build:ts": "tsc -p typescript/tsconfig.build.json",
-    "build:renderer": "sass --no-source-map typescript/renderer/css/index.scss dist/index.css",
-    "check:rendering": "node scripts/check-rendering.mjs"
+    "build:renderer": "sass --no-source-map styles/index.scss dist/index.css",
+    "check:rendering": "node scripts/check-rendering.mjs",
+    "corpus:collect": "node scripts/corpus/fetch.mjs",
+    "corpus:compare": "node scripts/corpus/compare.mjs",
+    "corpus:report": "node scripts/corpus/report.mjs",
+    "test:corpus": "node --test scripts/corpus/*.test.mjs"
   },
   "repository": {
     "type": "git",
@@ -72,7 +78,10 @@
     "@traq-markdown-parser/core": "file:../core",
     "@traq-markdown-parser/trap-extension": "file:../trap-extension",
     "@types/node": "26.3.0",
+    "esbuild": "^0.25.12",
+    "jest-diff": "^30.2.0",
     "markdown-it": "^14.1.0",
+    "parse5": "^7.3.0",
     "sass": "^1.97.3",
     "typescript": "6.0.3"
   },

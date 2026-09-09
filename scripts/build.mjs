@@ -56,6 +56,6 @@ run(process.execPath, ["scripts/contract.mjs"]);
 run(process.execPath, [
   "node_modules/sass/sass.js",
   "--no-source-map",
-  "typescript/renderer/css/index.scss",
+  "styles/index.scss",
   "dist/index.css",
 ]);

@@ -3,7 +3,8 @@ import { names, isKnownNode } from "@traq-markdown-parser/commonmark/nodes";
 import { names as trap } from "@traq-markdown-parser/trap-extension/nodes";
 
 export type Embedding =
-  | { type: "file" | "message"; id: string }
+  | { type: "file"; id: string }
+  | { type: "message"; id: string }
   | { type: "url"; url: string };
 
 /** traQ links describe cards; external links describe OGP candidates. */

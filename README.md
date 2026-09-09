@@ -146,3 +146,7 @@ runtime.dispose();
 ```
 
 Wasm の起動は利用側が明示的に行います。`/renderer` を import しても Wasm runtime は読み込みません。描画のカスタマイズは `@traq-markdown-parser/core/renderer` の `Plugin`・`PresetBuilder` と、各構文の `/renderer` を利用します。
+
+## Corpus comparison
+
+Use `npm run corpus:collect`, `npm run corpus:compare`, and `npm run corpus:report` to collect messages and generate offline HTML/MHTML difference reports. See [Corpus comparison](docs/CORPUS.md) for inputs, options, and output files.
